@@ -78,7 +78,7 @@ class ProductoController extends Controller
             'stock' => $request->stock,
             'precio_referencial' => $request->precio_referencial,
             'categoria_id' => $request->categoria_id,
-            'imagenes' => $imagenPath, // columna en DB
+            'imagen' => $imagenPath, // columna en DB
         ]);
 
         return response()->json([
