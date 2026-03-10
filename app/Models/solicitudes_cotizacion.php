@@ -23,4 +23,10 @@ class solicitudes_cotizacion extends Model
         'observaciones_admin',
     ];
 
+    public function detalles()
+    {
+        return $this->hasMany(cotizacion_detalle::class, 'solicitud_id');
+    }
+
+
 }

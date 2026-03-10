@@ -17,7 +17,7 @@ class SolicitudesCotizacionController extends Controller
      */
     public function index()
     {
-        return solicitudes_cotizacion::all();
+        return solicitudes_cotizacion::with('detalles.producto')->get();
     }
 
     /**
@@ -114,7 +114,20 @@ class SolicitudesCotizacionController extends Controller
      */
     public function update(Request $request, solicitudes_cotizacion $solicitudes_cotizacion)
     {
-        //
+        $solicitudes_cotizacion = solicitudes_cotizacion::where('id', $request->id)->first();
+
+        $solicitudes_cotizacion->fecha_respuesta = now();
+        $solicitudes_cotizacion->estado = $request->estado;
+        $solicitudes_cotizacion->observaciones_admin = $request->observaciones_admin;
+
+        $solicitudes_cotizacion->save();
+
+        return response()->json([
+            'success' => true,
+            'data' => $solicitudes_cotizacion->fresh()
+        ]);
+
+
     }
 
     /**
@@ -123,8 +136,18 @@ class SolicitudesCotizacionController extends Controller
      * @param  \App\Models\solicitudes_cotizacion  $solicitudes_cotizacion
      * @return \Illuminate\Http\Response
      */
-    public function destroy(solicitudes_cotizacion $solicitudes_cotizacion)
+    public function destroy(Request $request, solicitudes_cotizacion $solicitudes_cotizacion)
     {
-        //
+        // Eliminar los detalles asociados
+        $solicitudes_cotizacion->detalles()->delete();
+
+        // Eliminar la cotización
+        $solicitudes_cotizacion->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Cotización y detalles eliminados correctamente'
+        ]);
+
     }
 }

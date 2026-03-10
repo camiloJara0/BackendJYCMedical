@@ -70,7 +70,6 @@ class CategoriaController extends Controller
      */
     public function update(Request $request, Categoria $categoria)
     {
-        $categoria = Categoria::findOrFail($id);
         $categoria->update($request->all());
         return $categoria;
     }
@@ -83,6 +82,8 @@ class CategoriaController extends Controller
      */
     public function destroy(Categoria $categoria)
     {
-        //
+        $categoria->estado = 'inactivo';
+        $categoria->save();
+        return $categoria;
     }
 }

@@ -15,7 +15,7 @@ class ProductoController extends Controller
      */
     public function index()
     {
-        $productos = Producto::all()->map(function ($producto) {
+        $productos = Producto::where('estado', 'activo')->get()->map(function ($producto) {
             $producto->imagen = asset('storage/' . $producto->imagen);
             return $producto;
         });
@@ -120,10 +120,40 @@ class ProductoController extends Controller
      */
     public function update(Request $request, Producto $producto)
     {
-        $producto = Producto::findOrFail($id);
-        $producto->update($request->all());
-        return $producto;
 
+        $producto = Producto::where('id', $request->id)->first();
+
+        $imagenPath = null;
+        // Manejo de imagen
+        if ($request->hasFile('imagen') && $request->file('imagen')->isValid()) {
+            $file = $request->file('imagen');
+
+            // Nombre seguro y único
+            $filename = Str::random(20) . '.' . $file->getClientOriginalExtension();
+
+            // Carpeta dentro del disco public
+            $folder = 'productos';
+
+            // Guardar archivo en storage/app/public/productos
+            $path = $file->storeAs($folder, $filename, 'public');
+
+            $imagenPath = $path;
+        }
+
+        // Actualizar producto
+        $producto->nombre = $request->nombre;
+        $producto->descripcion = $request->descripcion;
+        $producto->estado = 'activo';
+        $producto->stock = $request->stock;
+        $producto->precio_referencial = $request->precio_referencial;
+        $producto->categoria_id = $request->categoria_id;
+        $producto->imagen = $imagenPath ?? $producto->imagen; // columna en DB
+        $producto->save();
+
+        return response()->json([
+            'success' => true,
+            'data' => $producto
+        ]);
     }
 
     /**
@@ -134,6 +164,8 @@ class ProductoController extends Controller
      */
     public function destroy(Producto $producto)
     {
-        //
+        $producto->estado = 'inactivo';
+        $producto->save();
+        return $producto;
     }
 }

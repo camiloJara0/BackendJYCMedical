@@ -17,4 +17,10 @@ class cotizacion_detalle extends Model
         'cantidad',
         'comentarios',
     ];
+
+    public function producto()
+    {
+        return $this->belongsTo(Producto::class, 'producto_id');
+    }
+
 }
