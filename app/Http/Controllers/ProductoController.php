@@ -120,32 +120,28 @@ class ProductoController extends Controller
      */
     public function update(Request $request, Producto $producto)
     {
+    //
 
+    }
+
+    public function actualizar(Request $request)
+    {
         $producto = Producto::where('id', $request->id)->first();
-
         $imagenPath = null;
         // Manejo de imagen
         if ($request->hasFile('imagen') && $request->file('imagen')->isValid()) {
             $file = $request->file('imagen');
-
-            // Nombre seguro y único
             $filename = Str::random(20) . '.' . $file->getClientOriginalExtension();
-
-            // Carpeta dentro del disco public
             $folder = 'productos';
-
-            // Guardar archivo en storage/app/public/productos
             $path = $file->storeAs($folder, $filename, 'public');
-
             $imagenPath = $path;
         }
 
         // Actualizar producto
         $producto->nombre = $request->nombre;
-        $producto->descripcion = $request->descripcion;
-        $producto->estado = 'activo';
+        $producto->descripcion = $request->descripcion ?? null;
+        $producto->precio_referencial = $request->precio_referencial ?? null;
         $producto->stock = $request->stock;
-        $producto->precio_referencial = $request->precio_referencial;
         $producto->categoria_id = $request->categoria_id;
         $producto->imagen = $imagenPath ?? $producto->imagen; // columna en DB
         $producto->save();

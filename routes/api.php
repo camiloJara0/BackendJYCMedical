@@ -15,6 +15,8 @@ Route::post('/login', [UserController::class, 'login']);
 
 Route::middleware(['auth:sanctum', 'check.token.expiration'])->group(function () {
     Route::apiResource('/productos', ProductoController::class);
+    Route::post('/actualiza_productos', [ProductoController::class, 'actualizar']);
     Route::apiResource('/categorias', CategoriaController::class);
     Route::apiResource('/solicitud_cotizacion', SolicitudesCotizacionController::class);
+    Route::post('/eliminar_cotizacion', [SolicitudesCotizacionController::class, 'eliminar']);
 });

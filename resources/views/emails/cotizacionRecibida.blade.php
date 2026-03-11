@@ -33,7 +33,7 @@
                     </tr>
                     <tr>
                         <td align="center" style="padding: 20px;">
-                            <a href="{{ url('/Admin/Cotizaciones/' . $cotizacion->id) }}" style="display:inline-block; background-color:#007bff; color:#ffffff; text-decoration:none; padding:12px 24px; border-radius:4px; font-weight:bold;">
+                            <a href="{{ config('app.frontend_url') }}/Admin/Cotizaciones/{{ $cotizacion->id }}" style="display:inline-block; background-color:#007bff; color:#ffffff; text-decoration:none; padding:12px 24px; border-radius:4px; font-weight:bold;">
                                 Ver lista de cotizaciones
                             </a>
                         </td>
