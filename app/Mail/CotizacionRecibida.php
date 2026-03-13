@@ -28,7 +28,10 @@ class CotizacionRecibida extends Mailable
     public function build()
     {
         $email = $this->view('emails.cotizacionRecibida')
-                    ->with(['cotizacion' => $this->cotizacion]);
+                    ->with([
+                        'cotizacion' => $this->cotizacion,
+                        'imagenFile' => $this->imagenFile,
+                        ]);
 
         if ($this->imagenFile) {
             $email->attachData(
