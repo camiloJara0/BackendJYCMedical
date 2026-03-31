@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Categoria;
+use App\Models\Cliente;
 use Illuminate\Http\Request;
 
-class CategoriaController extends Controller
+class ClienteController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -14,7 +14,7 @@ class CategoriaController extends Controller
      */
     public function index()
     {
-        return Categoria::where('estado', 'activo')->get();
+        return Cliente::where('estado', 'activo')->get();
     }
 
     /**
@@ -35,28 +35,27 @@ class CategoriaController extends Controller
      */
     public function store(Request $request)
     {
-        return Categoria::create($request->all());
+        return Cliente::create($request->all());
     }
 
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Categoria  $categoria
+     * @param  \App\Models\Cliente  $cliente
      * @return \Illuminate\Http\Response
      */
-    public function show(Categoria $categoria)
+    public function show(Cliente $cliente)
     {
-        return Categoria::findOrFail($categoria->id);
-
+        return Cliente::findOrFail($id);
     }
 
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\Categoria  $categoria
+     * @param  \App\Models\Cliente  $cliente
      * @return \Illuminate\Http\Response
      */
-    public function edit(Categoria $categoria)
+    public function edit(Cliente $cliente)
     {
         //
     }
@@ -65,25 +64,25 @@ class CategoriaController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Categoria  $categoria
+     * @param  \App\Models\Cliente  $cliente
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Categoria $categoria)
+    public function update(Request $request, Cliente $cliente)
     {
-        $categoria->update($request->all());
-        return $categoria;
+        $Cliente->update($request->all());
+        return $Cliente;
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Categoria  $categoria
+     * @param  \App\Models\Cliente  $cliente
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Categoria $categoria)
+    public function destroy(Cliente $cliente)
     {
-        $categoria->estado = 'inactivo';
-        $categoria->save();
-        return $categoria;
+        $Cliente->estado = 'inactivo';
+        $Cliente->save();
+        return $Cliente;
     }
 }

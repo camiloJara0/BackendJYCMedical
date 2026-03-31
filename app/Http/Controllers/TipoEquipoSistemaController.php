@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Categoria;
+use App\Models\Tipo_equipo_sistema;
 use Illuminate\Http\Request;
 
-class CategoriaController extends Controller
+class TipoEquipoSistemaController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -14,7 +14,7 @@ class CategoriaController extends Controller
      */
     public function index()
     {
-        return Categoria::where('estado', 'activo')->get();
+        //
     }
 
     /**
@@ -35,28 +35,27 @@ class CategoriaController extends Controller
      */
     public function store(Request $request)
     {
-        return Categoria::create($request->all());
+        //
     }
 
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Categoria  $categoria
+     * @param  \App\Models\Tipo_equipo_sistema  $tipo_equipo_sistema
      * @return \Illuminate\Http\Response
      */
-    public function show(Categoria $categoria)
+    public function show(Tipo_equipo_sistema $tipo_equipo_sistema)
     {
-        return Categoria::findOrFail($categoria->id);
-
+        //
     }
 
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\Categoria  $categoria
+     * @param  \App\Models\Tipo_equipo_sistema  $tipo_equipo_sistema
      * @return \Illuminate\Http\Response
      */
-    public function edit(Categoria $categoria)
+    public function edit(Tipo_equipo_sistema $tipo_equipo_sistema)
     {
         //
     }
@@ -65,25 +64,22 @@ class CategoriaController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Categoria  $categoria
+     * @param  \App\Models\Tipo_equipo_sistema  $tipo_equipo_sistema
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Categoria $categoria)
+    public function update(Request $request, Tipo_equipo_sistema $tipo_equipo_sistema)
     {
-        $categoria->update($request->all());
-        return $categoria;
+        //
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Categoria  $categoria
+     * @param  \App\Models\Tipo_equipo_sistema  $tipo_equipo_sistema
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Categoria $categoria)
+    public function destroy(Tipo_equipo_sistema $tipo_equipo_sistema)
     {
-        $categoria->estado = 'inactivo';
-        $categoria->save();
-        return $categoria;
+        //
     }
 }

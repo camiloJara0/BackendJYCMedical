@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Categoria;
+use App\Models\Equipo;
 use Illuminate\Http\Request;
 
-class CategoriaController extends Controller
+class EquipoController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -14,7 +14,7 @@ class CategoriaController extends Controller
      */
     public function index()
     {
-        return Categoria::where('estado', 'activo')->get();
+        return Equipo::where('estado', 'activo')->get();
     }
 
     /**
@@ -35,28 +35,27 @@ class CategoriaController extends Controller
      */
     public function store(Request $request)
     {
-        return Categoria::create($request->all());
+        return Equipo::create($request->all());
     }
 
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Categoria  $categoria
+     * @param  \App\Models\Equipo  $equipo
      * @return \Illuminate\Http\Response
      */
-    public function show(Categoria $categoria)
+    public function show(Equipo $equipo)
     {
-        return Categoria::findOrFail($categoria->id);
-
+        return Equipo::findOrFail($id);
     }
 
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\Categoria  $categoria
+     * @param  \App\Models\Equipo  $equipo
      * @return \Illuminate\Http\Response
      */
-    public function edit(Categoria $categoria)
+    public function edit(Equipo $equipo)
     {
         //
     }
@@ -65,25 +64,25 @@ class CategoriaController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Categoria  $categoria
+     * @param  \App\Models\Equipo  $equipo
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Categoria $categoria)
+    public function update(Request $request, Equipo $equipo)
     {
-        $categoria->update($request->all());
-        return $categoria;
+        $Equipo->update($request->all());
+        return $Equipo;
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Categoria  $categoria
+     * @param  \App\Models\Equipo  $equipo
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Categoria $categoria)
+    public function destroy(Equipo $equipo)
     {
-        $categoria->estado = 'inactivo';
-        $categoria->save();
-        return $categoria;
+        $Equipo->estado = 'inactivo';
+        $Equipo->save();
+        return $Equipo;
     }
 }

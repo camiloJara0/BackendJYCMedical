@@ -1,0 +1,149 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Tecnico;
+use App\Models\User;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\CodigoVerificacionMail;
+use App\Models\CodigoVerificacion;
+use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+
+class TecnicoController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function index()
+    {
+        return Tecnico::get();
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function create()
+    {
+        //
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function store(Request $request)
+    {
+        $correo = User::where('correo', $request->correo)->first();
+        if($correo){
+            // 4️⃣ Respuesta
+            return response()->json([
+                'success' => false,
+                'message' => 'Correo del tecnico ya registrado.',
+                'correo' => $correo,
+            ], 201);
+        }
+
+            // guardar usuario si no existe
+            $usuario = new User();
+            $usuario->nombre = $request->nombre;
+            $usuario->correo = $request->correo;
+            $usuario->contraseña = null;
+            $usuario->rol = 'Tecnico';
+            $usuario->estado = 'activo';
+            $usuario-> save();
+
+            $codigo = Str::random(6);
+
+            CodigoVerificacion::create([
+                'correo' => $usuario->correo,
+                'codigo' => $codigo,
+                'expira_en' => Carbon::now()->addMinutes(240)
+            ]);
+
+            // --- Manejo del sello (imagen) ---
+
+            // Reglas recomendadas de validación
+            $request->validate([
+                'selloFile' => 'nullable|file|mimes:png,jpg,jpeg,webp|max:5120', // max 5MB
+            ]);
+
+            $selloPath = null;
+            if ($request->hasFile('selloFile') && $request->file('selloFile')->isValid()) {
+                $file = $request->file('selloFile');
+
+                // Nombre seguro y único
+                $filename = Str::random(20) . '.' . $file->getClientOriginalExtension();
+
+                // Ruta dentro del disco public
+                $folder = 'tecnicos';
+
+                // Si no usamos intervention simplemente guardamos
+                $path = $file->storeAs($folder, $filename, 'public'); // devuelve 'tecnicos/xxx.jpg'
+
+                $selloPath = $path;
+            }
+
+            Mail::to($usuario->correo)->send(new CodigoVerificacionMail($usuario->correo, $codigo));
+
+        return Tecnico::create([
+                    'user_id' => $usuario->id,
+                    'sello' => $selloPath
+                ] + $request->all());
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param  \App\Models\Tecnico  $tecnico
+     * @return \Illuminate\Http\Response
+     */
+    public function show(Tecnico $tecnico)
+    {
+        return Tecnico::findOrFail($id);
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     *
+     * @param  \App\Models\Tecnico  $tecnico
+     * @return \Illuminate\Http\Response
+     */
+    public function edit(Tecnico $tecnico)
+    {
+        //
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\Tecnico  $tecnico
+     * @return \Illuminate\Http\Response
+     */
+    public function update(Request $request, Tecnico $tecnico)
+    {
+        $Tecnico->update($request->all());
+        return $Tecnico;
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  \App\Models\Tecnico  $tecnico
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy(Tecnico $tecnico)
+    {
+        $Tecnico->estado = 'inactivo';
+        $Tecnico->save();
+        return $Tecnico;
+    }
+}

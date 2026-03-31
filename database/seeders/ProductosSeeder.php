@@ -17,7 +17,7 @@ class ProductosSeeder extends Seeder
     {
         DB::table('productos')->insert([
             [
-                'nombre' => 'Drager OxyTrace VE MX01049',
+                'nombre' => 'Sensor de Oxigeno Drager OxyTrace VE MX01049',
                 'imagen' => 'productos/Drager OxyTrace VE MX01049.png',
                 'descripcion' => 'sensor de oxigeno drager',
                 'estado' => 'activo',
@@ -26,7 +26,7 @@ class ProductosSeeder extends Seeder
                 'categoria_id' => 2,
             ],
             [
-                'nombre' => 'ITGM',
+                'nombre' => 'Sensor de OxigenoITGM',
                 'imagen' => 'productos/ITGM-04.jpg',
                 'descripcion' => 'sensor de oxigeno',
                 'estado' => 'activo',
@@ -35,7 +35,7 @@ class ProductosSeeder extends Seeder
                 'categoria_id' => 2,
             ],
             [
-                'nombre' => 'MAQUET Servo I - Servo S',
+                'nombre' => 'Sensor de OxigenoMAQUET Servo I - Servo S',
                 'imagen' => 'productos/MAQUET SERVO I - SERVO S.jpg',
                 'descripcion' => 'sensor de oxigeno maquet',
                 'estado' => 'activo',
@@ -44,7 +44,7 @@ class ProductosSeeder extends Seeder
                 'categoria_id' => 2,
             ],
             [
-                'nombre' => 'Maquet',
+                'nombre' => 'Sensor de Oxigeno Maquet',
                 'imagen' => 'productos/MAQUET.jpg',
                 'descripcion' => 'sensor de oxigeno maquet',
                 'estado' => 'activo',
@@ -53,7 +53,7 @@ class ProductosSeeder extends Seeder
                 'categoria_id' => 2,
             ],
             [
-                'nombre' => 'MAX-250A',
+                'nombre' => 'Sensor de Oxigeno MAX-250A',
                 'imagen' => 'productos/MAX-250A.jpg',
                 'descripcion' => 'sensor de oxigeno maxtec',
                 'estado' => 'activo',
@@ -62,7 +62,7 @@ class ProductosSeeder extends Seeder
                 'categoria_id' => 2,
             ],
             [
-                'nombre' => 'MAX-250B',
+                'nombre' => 'Sensor de Oxigeno MAX-250B',
                 'imagen' => 'productos/MAX-250B.jpg',
                 'descripcion' => 'sensor de oxigeno maxtec',
                 'estado' => 'activo',
@@ -71,7 +71,7 @@ class ProductosSeeder extends Seeder
                 'categoria_id' => 2,
             ],
             [
-                'nombre' => 'MAX-250E',
+                'nombre' => 'Sensor de Oxigeno MAX-250E',
                 'imagen' => 'productos/MAX-250E.jpg',
                 'descripcion' => 'sensor de oxigeno maxtec',
                 'estado' => 'activo',
@@ -80,7 +80,7 @@ class ProductosSeeder extends Seeder
                 'categoria_id' => 2,
             ],
             [
-                'nombre' => 'MLF-19 GE',
+                'nombre' => 'Sensor de Oxigeno MLF-19 GE',
                 'imagen' => 'productos/MLF-19 GE.jpg',
                 'descripcion' => 'sensor de oxigeno ge',
                 'estado' => 'activo',
@@ -89,7 +89,7 @@ class ProductosSeeder extends Seeder
                 'categoria_id' => 2,
             ],
             [
-                'nombre' => 'MOX-3',
+                'nombre' => 'Sensor de Oxigeno MOX-3',
                 'imagen' => 'productos/MOX-3.jpg',
                 'descripcion' => 'sensor de oxigeno mox',
                 'estado' => 'activo',
@@ -98,7 +98,7 @@ class ProductosSeeder extends Seeder
                 'categoria_id' => 2,
             ],
             [
-                'nombre' => 'PSR-11-915-4',
+                'nombre' => 'Sensor de Oxigeno PSR-11-915-4',
                 'imagen' => 'productos/PSR-11-915-4.jpg',
                 'descripcion' => 'sensor de oxigeno compatible',
                 'estado' => 'activo',
@@ -116,7 +116,7 @@ class ProductosSeeder extends Seeder
                 'categoria_id' => 2,
             ],
             [
-                'nombre' => 'Compatible Mindray C5-2S',
+                'nombre' => 'Transductor para ultrasonido Compatible Mindray C5-2S',
                 'imagen' => 'productos/Compatible Mindray C5-2S.png',
                 'descripcion' => 'transductor convexo para ultrasonido compatible mindray',
                 'estado' => 'activo',
@@ -125,7 +125,7 @@ class ProductosSeeder extends Seeder
                 'categoria_id' => 3,
             ],
             [
-                'nombre' => 'Compatible Mindray Endocavitario',
+                'nombre' => 'Transductor para ultrasonido Compatible Mindray Endocavitario',
                 'imagen' => 'productos/Compatible Mindray Endocavitario.png',
                 'descripcion' => 'transductor endocavitario para ultrasonido compatible mindray',
                 'estado' => 'activo',
@@ -134,7 +134,7 @@ class ProductosSeeder extends Seeder
                 'categoria_id' => 3,
             ],
             [
-                'nombre' => 'Compatible Sonoscape L741',
+                'nombre' => 'Transductor para ultrasonido Compatible Sonoscape L741',
                 'imagen' => 'productos/Compatible Sonoscape L741.png',
                 'descripcion' => 'transductor lineal para ultrasonido compatible sonoscape',
                 'estado' => 'activo',
@@ -143,7 +143,7 @@ class ProductosSeeder extends Seeder
                 'categoria_id' => 3,
             ],
             [
-                'nombre' => 'Compatible Sonoscape SS1-2000 C344',
+                'nombre' => 'Transductor para ultrasonido Compatible Sonoscape SS1-2000 C344',
                 'imagen' => 'productos/Compatible Sonoscape SS1-2000 C344.png',
                 'descripcion' => 'transductor convexo para ultrasonido compatible sonoscape',
                 'estado' => 'activo',
@@ -152,7 +152,7 @@ class ProductosSeeder extends Seeder
                 'categoria_id' => 3,
             ],
             [
-                'nombre' => 'Adulto obeso una vía',
+                'nombre' => 'Brazalete de Adulto obeso una vía',
                 'imagen' => 'productos/ADULTO OBESO UNA VIA.png',
                 'descripcion' => 'brazalete nibp adulto obeso una via',
                 'estado' => 'activo',
@@ -161,7 +161,7 @@ class ProductosSeeder extends Seeder
                 'categoria_id' => 4,
             ],
             [
-                'nombre' => 'Adulto una vía',
+                'nombre' => 'Brazalete de Adulto una vía',
                 'imagen' => 'productos/ADULTO UNA VIA.png',
                 'descripcion' => 'brazalete nibp adulto una via',
                 'estado' => 'activo',
@@ -179,7 +179,7 @@ class ProductosSeeder extends Seeder
                 'categoria_id' => 4,
             ],
             [
-                'nombre' => 'Desechable doble vía #1',
+                'nombre' => 'Brazalete Desechable doble vía #1',
                 'imagen' => 'productos/DESECHABLE DOBLE VIA #1.png',
                 'descripcion' => 'brazalete nibp desechable doble via',
                 'estado' => 'activo',
@@ -188,7 +188,7 @@ class ProductosSeeder extends Seeder
                 'categoria_id' => 4,
             ],
             [
-                'nombre' => 'Desechable doble vía #2',
+                'nombre' => 'Brazalete Desechable doble vía #2',
                 'imagen' => 'productos/DESECHABLE DOBLE VIA #2.png',
                 'descripcion' => 'brazalete nibp desechable doble via',
                 'estado' => 'activo',
@@ -197,7 +197,7 @@ class ProductosSeeder extends Seeder
                 'categoria_id' => 4,
             ],
             [
-                'nombre' => 'Desechable doble vía #3',
+                'nombre' => 'Brazalete Desechable doble vía #3',
                 'imagen' => 'productos/DESECHABLE DOBLE VIA #3.png',
                 'descripcion' => 'brazalete nibp desechable doble via',
                 'estado' => 'activo',
@@ -206,7 +206,7 @@ class ProductosSeeder extends Seeder
                 'categoria_id' => 4,
             ],
             [
-                'nombre' => 'Desechable doble vía #4',
+                'nombre' => 'Brazalete Desechable doble vía #4',
                 'imagen' => 'productos/DESECHABLE DOBLE VIA #4.png',
                 'descripcion' => 'brazalete nibp desechable doble via',
                 'estado' => 'activo',
@@ -215,7 +215,7 @@ class ProductosSeeder extends Seeder
                 'categoria_id' => 4,
             ],
             [
-                'nombre' => 'Desechable doble vía #5',
+                'nombre' => 'Brazalete Desechable doble vía #5',
                 'imagen' => 'productos/DESECHABLE DOBLE VIA #5.png',
                 'descripcion' => 'brazalete nibp desechable doble via',
                 'estado' => 'activo',
@@ -224,7 +224,7 @@ class ProductosSeeder extends Seeder
                 'categoria_id' => 4,
             ],
             [
-                'nombre' => 'NIBP neonato una vía desechable',
+                'nombre' => 'Brazalete de NIBP neonato una vía desechable',
                 'imagen' => 'productos/NIBPP NEONATO UNA VIA DESECHABLE.webp',
                 'descripcion' => 'brazalete nibp neonato desechable',
                 'estado' => 'activo',
@@ -278,7 +278,7 @@ class ProductosSeeder extends Seeder
                 'categoria_id' => 5,
             ],
             [
-                'nombre' => 'Cable troncal EKG',
+                'nombre' => 'Electrocardiógrafos Cable troncal EKG',
                 'imagen' => 'productos/CABLE TRONCAL EKG.png',
                 'descripcion' => 'cable troncal para electrocardiografo',
                 'estado' => 'activo',
@@ -287,7 +287,7 @@ class ProductosSeeder extends Seeder
                 'categoria_id' => 6,
             ],
             [
-                'nombre' => 'Clamps ECG',
+                'nombre' => 'Electrocardiógrafos Clamps ECG',
                 'imagen' => 'productos/CLAMPS ECG.png',
                 'descripcion' => 'clamps ecg para extremidades',
                 'estado' => 'activo',
@@ -296,7 +296,7 @@ class ProductosSeeder extends Seeder
                 'categoria_id' => 6,
             ],
             [
-                'nombre' => 'Electrodos de succión ECG',
+                'nombre' => 'Electrocardiógrafos Electrodos de succión ECG',
                 'imagen' => 'productos/Electrodos de succión ECG.png',
                 'descripcion' => 'electrodos de succion para ecg',
                 'estado' => 'activo',
@@ -305,7 +305,7 @@ class ProductosSeeder extends Seeder
                 'categoria_id' => 6,
             ],
             [
-                'nombre' => 'Latiguillos ECG',
+                'nombre' => 'Electrocardiógrafos Latiguillos ECG',
                 'imagen' => 'productos/LATIGUILLOS.png',
                 'descripcion' => 'latiguillos para cable ecg',
                 'estado' => 'activo',
@@ -314,7 +314,7 @@ class ProductosSeeder extends Seeder
                 'categoria_id' => 6,
             ],
             [
-                'nombre' => 'Tipos de ECG',
+                'nombre' => 'Electrocardiógrafos Tipos de ECG',
                 'imagen' => 'productos/TIPOS DE ECG.png',
                 'descripcion' => 'accesorios y cables para ecg',
                 'estado' => 'activo',

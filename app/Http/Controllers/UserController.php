@@ -3,9 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\CodigoVerificacion;
+use App\Mail\CodigoVerificacionMail;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Request\Login;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Http\Request;
 
 class UserController extends Controller
@@ -139,5 +144,91 @@ class UserController extends Controller
             ],
         ]);
 
+    }
+
+    public function verificacion(Request $request)
+    {
+        $request->validate(['correo' => 'required|email']);
+
+        $usuario = User::where('correo', $request->correo)->first();
+
+        if (!$usuario) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Correo no registrado'
+            ]);
+        }
+
+        $codigo = Str::random(6);
+
+        CodigoVerificacion::create([
+            'correo' => $usuario->correo,
+            'codigo' => $codigo,
+            'expira_en' => Carbon::now()->addMinutes(240)
+        ]);
+
+        Mail::to($usuario->correo)->send(new CodigoVerificacionMail($usuario->correo, $codigo));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Correo enviado con código de verificación'
+        ]);
+    }
+
+    public function verificarCodigo(Request $request)
+    {
+        $request->validate([
+            'correo' => 'required|email',
+            'codigo' => 'required|string',
+            'contraseña' => 'required|min:6'
+        ]);
+
+        $registro = CodigoVerificacion::where('correo', $request->correo)
+            ->where('codigo', $request->codigo)
+            ->where('usado', false)
+            ->where('expira_en', '>', now())
+            ->first();
+
+        if (!$registro) {
+            return response()->json(['message' => 'Código inválido o expirado'], 401);
+        }
+
+        $usuario = User::where('correo', $request->correo)->first();
+        $usuario->contraseña = Hash::make($request->contraseña);
+        $usuario->save();
+
+        $registro->usado = true;
+        $registro->save();
+
+        return response()->json(['success' => true, 'message' => 'Contraseña actualizada correctamente']);
+    }
+
+    public function verificarCodigoPrimerVez(Request $request)
+    {
+        $request->validate([
+            'codigo' => 'required|string',
+            'contraseña' => 'required|min:6'
+        ]);
+
+        $correo = CodigoVerificacion::where('codigo', $request->codigo)->first();
+
+        $registro = CodigoVerificacion::where('correo', $correo->correo)
+            ->where('codigo', $request->codigo)
+            ->where('usado', false)
+            ->where('expira_en', '>', now())
+            ->first();
+
+        if (!$registro) {
+            return response()->json(['message' => 'Código inválido o expirado'], 401);
+        }
+
+        $usuario = User::where('correo', $correo->correo)->first();
+        $usuario->contraseña = Hash::make($request->contraseña);
+        $usuario->save();
+
+        $registro->usado = true;
+        $registro->save();
+
+        return response()->json(['success' => true, 'message' => 'Contraseña actualizada correctamente']);
     }
 }
