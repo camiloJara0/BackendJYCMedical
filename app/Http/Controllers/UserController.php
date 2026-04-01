@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Tecnico;
 use App\Models\CodigoVerificacion;
 use App\Mail\CodigoVerificacionMail;
 use Illuminate\Support\Carbon;
@@ -134,6 +135,13 @@ class UserController extends Controller
         // Obtén el token en texto plano
         $token = $tokenResult->plainTextToken;
 
+        $tecnico_id = '';
+        if ($user->rol == 'Tecnico'){
+            $tecnico = Tecnico::where('user_id', $user->id)->first();
+
+            $tecnico_id = $tecnico->id;
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Login exitoso',
@@ -141,6 +149,8 @@ class UserController extends Controller
             'user' => [
                 'correo' => $user->correo,
                 'rol' => $user->rol,
+                'name' => $user->nombre,
+                'tecnico_id' => $tecnico_id,
             ],
         ]);
 

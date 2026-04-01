@@ -84,8 +84,8 @@ class CitaController extends Controller
      */
     public function update(Request $request, Cita $cita)
     {
-        $Cita->update($request->all());
-        return $Cita;
+        $cita->update($request->all());
+        return $cita;
     }
 
     /**
@@ -94,10 +94,10 @@ class CitaController extends Controller
      * @param  \App\Models\Cita  $cita
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Cita $cita)
+    public function destroy($id)
     {
-        $Cita->estado = 'inactivo';
-        $Cita->save();
-        return $Cita;
+        $cita = Cita::findOrFail($id);    
+        $cita->update(['estado' => 'cancelada']);
+        return $cita;
     }
 }

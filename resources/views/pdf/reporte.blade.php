@@ -95,7 +95,7 @@
                 <td style="width:40%; text-align:right; font-size:11px;">
                     <p><strong>Código:</strong> FOR-MAN-001</p>
                     <p><strong>Fecha:</strong> {{ $reporte->fecha }}</p>
-                    <p><strong>Reporte No:</strong> {{ $reporte->id }}</p><p><strong>Página:</strong> <span class="pagenum"></span></p>
+                    <p><strong>Reporte No:</strong> {{ $reporte->id }}.  <strong>Página:</strong> <span class="pagenum"></span></p>
                 </td>
             </tr>
         </table>

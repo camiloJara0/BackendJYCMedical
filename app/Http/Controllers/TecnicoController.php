@@ -72,22 +72,18 @@ class TecnicoController extends Controller
 
             // Reglas recomendadas de validación
             $request->validate([
-                'selloFile' => 'nullable|file|mimes:png,jpg,jpeg,webp|max:5120', // max 5MB
+                'sello' => 'nullable|file|mimes:png,jpg,jpeg,webp|max:5120', // max 5MB
             ]);
 
             $selloPath = null;
-            if ($request->hasFile('selloFile') && $request->file('selloFile')->isValid()) {
-                $file = $request->file('selloFile');
-
+            if ($request->hasFile('sello') && $request->file('sello')->isValid()) {
+                $file = $request->file('sello');
                 // Nombre seguro y único
                 $filename = Str::random(20) . '.' . $file->getClientOriginalExtension();
-
                 // Ruta dentro del disco public
                 $folder = 'tecnicos';
-
                 // Si no usamos intervention simplemente guardamos
                 $path = $file->storeAs($folder, $filename, 'public'); // devuelve 'tecnicos/xxx.jpg'
-
                 $selloPath = $path;
             }
 

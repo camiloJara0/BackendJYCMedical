@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Tipo_equipo;
+use App\Models\Tipo_equipo_sistema;
+use App\Models\Equipo;
+use App\Models\Cita;
 use Illuminate\Http\Request;
 
 class TipoEquipoController extends Controller
@@ -38,7 +41,7 @@ class TipoEquipoController extends Controller
         $tipo_equipo = Tipo_equipo::create($request->all());
         // Luego recorres el array de sistemas
         foreach ($request->sistemas as $sistema_id) {
-            TipoEquipoSistema::create([
+            Tipo_equipo_sistema::create([
                 'sistema_id'     => $sistema_id,
                 'tipo_equipo_id' => $tipo_equipo->id,
             ]);
@@ -95,8 +98,20 @@ class TipoEquipoController extends Controller
      */
     public function destroy(Tipo_equipo $tipo_equipo)
     {
-        $Tipo_equipo->estado = 'inactivo';
-        $Tipo_equipo->save();
-        return $Tipo_equipo;
+        // Obtener todos los equipos asociados al tipo de equipo
+        $equipos = Equipo::where('tipo_equipo_id', $tipo_equipo->id)->get();
+
+        foreach ($equipos as $equipo) {
+            // Marcar el equipo como inactivo
+            $equipo->update(['estado' => 'inactivo']);
+
+            // Rechazar todas las citas asociadas a este equipo
+            Cita::where('equipo_id', $equipo->id)
+                ->update(['estado' => 'rechazada']);
+        }
+
+        $tipo_equipo->estado = 'inactivo';
+        $tipo_equipo->save();
+        return $tipo_equipo;
     }
 }
