@@ -21,6 +21,8 @@ use App\Http\Controllers\RepuestosController;
 use App\Http\Controllers\SistemaController;
 use App\Http\Controllers\TecnicoController;
 use App\Http\Controllers\TipoEquipoController;
+use App\Http\Controllers\RolController;
+use App\Http\Controllers\SeccionController;
 
 Route::get('/getproductos', [ProductoController::class, 'index']);
 Route::get('/getcategorias', [CategoriaController::class, 'index']);
@@ -52,4 +54,6 @@ Route::middleware(['auth:sanctum', 'check.token.expiration'])->group(function ()
     Route::apiResource('/sistema', SistemaController::class);
     Route::apiResource('/tecnico', TecnicoController::class);
     Route::apiResource('/tipo_equipo', TipoEquipoController::class);
+    Route::apiResource('/rol', RolController::class);
+    Route::apiResource('/secciones', SeccionController::class);
 });

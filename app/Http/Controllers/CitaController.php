@@ -84,6 +84,7 @@ class CitaController extends Controller
      */
     public function update(Request $request, Cita $cita)
     {
+        $cita = Cita::where('id', $request->id)->first();
         $cita->update($request->all());
         return $cita;
     }
