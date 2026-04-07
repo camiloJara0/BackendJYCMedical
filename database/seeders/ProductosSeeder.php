@@ -36,7 +36,7 @@ class ProductosSeeder extends Seeder
             ],
             [
                 'nombre' => 'Sensor de OxigenoMAQUET Servo I - Servo S',
-                'imagen' => 'productos/MAQUET SERVO I - SERVO S.jpg',
+                'imagen' => 'productos/MAQUET SERVO I- SERVO S.jpg',
                 'descripcion' => 'sensor de oxigeno maquet',
                 'estado' => 'activo',
                 'stock' => 1,
@@ -180,7 +180,7 @@ class ProductosSeeder extends Seeder
             ],
             [
                 'nombre' => 'Brazalete Desechable doble vía #1',
-                'imagen' => 'productos/DESECHABLE DOBLE VIA #1.png',
+                'imagen' => 'productos/DESECHABLE DOBLE VIA 1.png',
                 'descripcion' => 'brazalete nibp desechable doble via',
                 'estado' => 'activo',
                 'stock' => 1,
@@ -189,7 +189,7 @@ class ProductosSeeder extends Seeder
             ],
             [
                 'nombre' => 'Brazalete Desechable doble vía #2',
-                'imagen' => 'productos/DESECHABLE DOBLE VIA #2.png',
+                'imagen' => 'productos/DESECHABLE DOBLE VIA 2.png',
                 'descripcion' => 'brazalete nibp desechable doble via',
                 'estado' => 'activo',
                 'stock' => 1,
@@ -198,7 +198,7 @@ class ProductosSeeder extends Seeder
             ],
             [
                 'nombre' => 'Brazalete Desechable doble vía #3',
-                'imagen' => 'productos/DESECHABLE DOBLE VIA #3.png',
+                'imagen' => 'productos/DESECHABLE DOBLE VIA 3.png',
                 'descripcion' => 'brazalete nibp desechable doble via',
                 'estado' => 'activo',
                 'stock' => 1,
@@ -207,7 +207,7 @@ class ProductosSeeder extends Seeder
             ],
             [
                 'nombre' => 'Brazalete Desechable doble vía #4',
-                'imagen' => 'productos/DESECHABLE DOBLE VIA #4.png',
+                'imagen' => 'productos/DESECHABLE DOBLE VIA 4.png',
                 'descripcion' => 'brazalete nibp desechable doble via',
                 'estado' => 'activo',
                 'stock' => 1,
@@ -216,7 +216,7 @@ class ProductosSeeder extends Seeder
             ],
             [
                 'nombre' => 'Brazalete Desechable doble vía #5',
-                'imagen' => 'productos/DESECHABLE DOBLE VIA #5.png',
+                'imagen' => 'productos/DESECHABLE DOBLE VIA 5.png',
                 'descripcion' => 'brazalete nibp desechable doble via',
                 'estado' => 'activo',
                 'stock' => 1,
@@ -225,7 +225,7 @@ class ProductosSeeder extends Seeder
             ],
             [
                 'nombre' => 'Brazalete de NIBP neonato una vía desechable',
-                'imagen' => 'productos/NIBPP NEONATO UNA VIA DESECHABLE.webp',
+                'imagen' => 'productos/NIBP NEONATO UNA VIA DESECHABLE.webp',
                 'descripcion' => 'brazalete nibp neonato desechable',
                 'estado' => 'activo',
                 'stock' => 1,
@@ -234,7 +234,7 @@ class ProductosSeeder extends Seeder
             ],
             [
                 'nombre' => 'ECG Holter compatible GE SEER 7 DER',
-                'imagen' => 'productos/ECG HOLTER COMPATIBLE GE SEER 7 DER.jpg',
+                'imagen' => 'productos/ECG HOLTER COMPATIBLE  GE SEER 7 DER.jpg',
                 'descripcion' => 'cable ecg holter compatible ge',
                 'estado' => 'activo',
                 'stock' => 1,
@@ -252,7 +252,7 @@ class ProductosSeeder extends Seeder
             ],
             [
                 'nombre' => 'ECG Holter compatible Mortara H3+5 DER',
-                'imagen' => 'productos/ECG HOLTER COMPATIBLE Mortara H3+5 DER.png',
+                'imagen' => 'productos/ECG HOLTER COMPATIBLE Mortara H35 DER.png',
                 'descripcion' => 'cable ecg holter compatible mortara',
                 'estado' => 'activo',
                 'stock' => 1,

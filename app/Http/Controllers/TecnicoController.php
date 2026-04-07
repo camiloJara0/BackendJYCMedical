@@ -10,6 +10,7 @@ use App\Mail\CodigoVerificacionMail;
 use App\Models\CodigoVerificacion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 
 class TecnicoController extends Controller
 {
@@ -20,7 +21,11 @@ class TecnicoController extends Controller
      */
     public function index()
     {
-        return Tecnico::get();
+        return Tecnico::where('tecnicos.estado', 'activo')
+        ->join('users', 'tecnicos.user_id', '=', 'users.id')
+        ->select('tecnicos.*', 'users.correo as correo')
+        ->get();
+
     }
 
     /**
@@ -48,7 +53,7 @@ class TecnicoController extends Controller
                 'success' => false,
                 'message' => 'Correo del tecnico ya registrado.',
                 'correo' => $correo,
-            ], 201);
+            ], 500);
         }
 
             // guardar usuario si no existe
@@ -126,8 +131,35 @@ class TecnicoController extends Controller
      */
     public function update(Request $request, Tecnico $tecnico)
     {
-        $Tecnico->update($request->all());
-        return $Tecnico;
+        $tecnico = Tecnico::where('id', $request->id)->first();
+        // Si ya existe un sello, lo borramos
+        if ($request->hasFile('sello') && !empty($tecnico->sello)) {
+            Storage::disk('public')->delete($tecnico->sello);
+        }
+
+        if ($request->correo != $tecnico->correo){
+            
+        }
+
+        $selloPath = $tecnico->sello; // mantener el anterior si no se sube uno nuevo
+
+        // Si viene un archivo válido
+        if ($request->hasFile('sello') && $request->file('sello')->isValid()) {
+            $file = $request->file('sello');
+            $filename = Str::random(20) . '.' . $file->getClientOriginalExtension();
+            $folder = 'tecnicos';
+            $path = $file->storeAs($folder, $filename, 'public');
+            $selloPath = $path;
+        }
+
+        // Actualizamos todos los campos excepto sello
+        $data = $request->all();
+        $data['sello'] = $selloPath; // aseguramos que se guarde la ruta correcta
+
+        $tecnico->update($data);
+
+        return $tecnico;
+
     }
 
     /**
@@ -138,6 +170,9 @@ class TecnicoController extends Controller
      */
     public function destroy(Tecnico $tecnico)
     {
+        if (!empty($tecnico->sello)) {
+            Storage::disk('public')->delete($tecnico->sello);
+        }
         $Tecnico->estado = 'inactivo';
         $Tecnico->save();
         return $Tecnico;

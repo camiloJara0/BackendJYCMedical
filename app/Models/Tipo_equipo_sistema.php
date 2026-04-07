@@ -10,7 +10,7 @@ class Tipo_equipo_sistema extends Model
     use HasFactory;
 
     protected $table = 'tipo_equipo_sistemas';
-
+    public $timestamps = false;
     protected $fillable = [
         'tipo_equipo_id',
         'sistema_id',

@@ -81,6 +81,9 @@ class SistemaController extends Controller
      */
     public function destroy(Sistema $sistema)
     {
-        //
+        // Componente::where('sistema_id', $sistema->id)
+        //     ->delete();
+        
+        // $sistema->delete();
     }
 }

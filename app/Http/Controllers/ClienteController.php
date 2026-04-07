@@ -69,8 +69,8 @@ class ClienteController extends Controller
      */
     public function update(Request $request, Cliente $cliente)
     {
-        $Cliente->update($request->all());
-        return $Cliente;
+        $cliente->update($request->all());
+        return $cliente;
     }
 
     /**
@@ -81,8 +81,8 @@ class ClienteController extends Controller
      */
     public function destroy(Cliente $cliente)
     {
-        $Cliente->estado = 'inactivo';
-        $Cliente->save();
-        return $Cliente;
+        $cliente->estado = 'inactivo';
+        $cliente->save();
+        return $cliente;
     }
 }

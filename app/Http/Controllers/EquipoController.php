@@ -69,8 +69,8 @@ class EquipoController extends Controller
      */
     public function update(Request $request, Equipo $equipo)
     {
-        $Equipo->update($request->all());
-        return $Equipo;
+        $equipo->update($request->all());
+        return $equipo;
     }
 
     /**
@@ -81,8 +81,8 @@ class EquipoController extends Controller
      */
     public function destroy(Equipo $equipo)
     {
-        $Equipo->estado = 'inactivo';
-        $Equipo->save();
-        return $Equipo;
+        $equipo->estado = 'inactivo';
+        $equipo->save();
+        return $equipo;
     }
 }

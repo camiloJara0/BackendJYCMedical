@@ -7,10 +7,14 @@ use App\Models\Actividad;
 use App\Models\Material;
 use App\Models\Medicion;
 use App\Models\Repuesto;
+use App\Models\Accesorio;
+use App\Models\Tecnico;
 use App\Models\Estado_componente;
 use App\Models\Cita;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 
 class ReporteController extends Controller
@@ -71,6 +75,12 @@ class ReporteController extends Controller
                 $ids['Mediciones'][] = $nuevo->id;
             }
 
+            $ids['Accesorios'] = [];
+            foreach ($data['accesorios'] ?? [] as $accesorio) {
+                $nuevo = Accesorio::create([...$accesorio, 'reporte_id' => $reporte->id]);
+                $ids['Accesorios'][] = $nuevo->id;
+            }
+
             $ids['Repuestos'] = [];
             foreach ($data['repuestos'] ?? [] as $repuesto) {
                 $nuevo = Repuesto::create([...$repuesto, 'reporte_id' => $reporte->id]);
@@ -89,6 +99,34 @@ class ReporteController extends Controller
                     ->update([
                         'estado' => 'realizada',
                     ]);
+            }
+
+            if(!empty($data['firma'])) {
+                $tecnico = Tecnico::where('id', $reporte->tecnico_id)->first();
+
+                // Si ya existe un sello previo, lo eliminamos
+                if (!empty($tecnico->sello)) {
+                    Storage::disk('public')->delete($tecnico->sello);
+                }
+
+                // Decodificar la firma en base64
+                $imageData = $data['firma'];
+                // Remover encabezado "data:image/png;base64,"
+                $imageData = preg_replace('#^data:image/\w+;base64,#i', '', $imageData);
+                $imageData = str_replace(' ', '+', $imageData);
+                $decoded = base64_decode($imageData);
+
+                // Nombre único
+                $filename = Str::random(20) . '.png';
+                $folder = 'tecnicos';
+                $path = $folder . '/' . $filename;
+
+                // Guardar en disco public
+                Storage::disk('public')->put($path, $decoded);
+
+                // Actualizar el registro
+                $tecnico->update(['sello' => $path]);
+
             }
 
             DB::commit();
@@ -151,7 +189,7 @@ class ReporteController extends Controller
 
     public function imprimir($id)
     {
-        $reporte = Reporte::with('actividades', 'materiales', 'mediciones', 'repuestos', 'estado_componente.componente.sistema', 'tecnico', 'cliente', 'equipo')->findOrFail($id);
+        $reporte = Reporte::with('actividades', 'materiales', 'mediciones', 'repuestos', 'accesorios', 'estado_componente.componente.sistema', 'tecnico', 'cliente', 'equipo')->findOrFail($id);
         
         $fileName = 'reporte_' . $reporte->id . '_' . $reporte->equipo->nombre . '.pdf';
         $pdf = \PDF::loadView('pdf.reporte', compact('reporte'));

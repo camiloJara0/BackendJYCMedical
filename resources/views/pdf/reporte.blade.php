@@ -134,7 +134,7 @@
 
         @foreach($componentesPorSistema as $sistemaId => $componentes)
         <div style="margin-top:15px;">
-            <h4 style="margin-bottom:5px; color:#374151;">Sistema {{ $sistemaId }}</h4>
+            <h4 style="margin-bottom:5px; color:#374151;">{{ $sistemaId }}</h4>
 
             <table style="width:100%; border-collapse: collapse;">
                 <thead>
@@ -166,6 +166,37 @@
             </table>
         </div>
         @endforeach
+    </section>
+
+    <!-- ACCESORIOS -->
+    <section style="margin-top:20px;">
+        <h3 style="color:#2262a3;">Accesorios con los que cuenta</h3>
+        <table style="width:100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background:#f3f4f6;">
+                    <th style="padding:6px;">Nombre</th>
+                    <th style="padding:6px;">Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($reporte->accesorios as $accesorio)
+                <tr>
+                        <td style="padding:6px;">{{ $accesorio->nombre }}</td>
+                        <td style="padding:6px; text-align:center;">
+                            <span style="
+                  padding:3px 8px;
+                  border-radius:8px;
+                  background:
+                  {{ $accesorio->estado == 'Bueno' ? '#94c53d' : ($accesorio->estado == 'regular' ? '#dd9d5c' : '#bc2e15') }};
+                  color:white;
+                ">
+                                {{ $accesorio->estado }}
+                            </span>
+                        </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
     </section>
 
     <!-- MATERIALES -->

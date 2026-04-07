@@ -39,7 +39,7 @@ class TipoEquipoController extends Controller
     public function store(Request $request)
     {
         $tipo_equipo = Tipo_equipo::create($request->all());
-        // Luego recorres el array de sistemas
+        // array de sistemas
         foreach ($request->sistemas as $sistema_id) {
             Tipo_equipo_sistema::create([
                 'sistema_id'     => $sistema_id,

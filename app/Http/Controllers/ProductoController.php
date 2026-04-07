@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Producto;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class ProductoController extends Controller
@@ -127,9 +128,13 @@ class ProductoController extends Controller
     public function actualizar(Request $request)
     {
         $producto = Producto::where('id', $request->id)->first();
-        $imagenPath = null;
+        $imagenPath = $producto->imagen;
         // Manejo de imagen
         if ($request->hasFile('imagen') && $request->file('imagen')->isValid()) {
+            // Si ya existe una imagen previa, lo eliminamos
+            if (!empty($producto->imagen)) {
+                Storage::disk('public')->delete($producto->imagen);
+            }
             $file = $request->file('imagen');
             $filename = Str::random(20) . '.' . $file->getClientOriginalExtension();
             $folder = 'productos';
@@ -143,7 +148,7 @@ class ProductoController extends Controller
         $producto->precio_referencial = $request->precio_referencial ?? null;
         $producto->stock = $request->stock;
         $producto->categoria_id = $request->categoria_id;
-        $producto->imagen = $imagenPath ?? $producto->imagen; // columna en DB
+        $producto->imagen = $imagenPath; // columna en DB
         $producto->save();
 
         return response()->json([
@@ -160,6 +165,9 @@ class ProductoController extends Controller
      */
     public function destroy(Producto $producto)
     {
+        if (!empty($producto->imagen)) {
+            Storage::disk('public')->delete($producto->imagen);
+        }
         $producto->estado = 'inactivo';
         $producto->save();
         return $producto;

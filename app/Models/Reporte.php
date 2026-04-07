@@ -31,6 +31,11 @@ class Reporte extends Model
         return $this->hasMany(Material::class);
     }
 
+    public function accesorios()
+    {
+        return $this->hasMany(Accesorio::class);
+    }
+
     public function mediciones()
     {
         return $this->hasMany(Medicion::class);
