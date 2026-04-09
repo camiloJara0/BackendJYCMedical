@@ -14,7 +14,7 @@ class EquipoController extends Controller
      */
     public function index()
     {
-        return Equipo::where('estado', 'activo')->get();
+        return Equipo::get();
     }
 
     /**

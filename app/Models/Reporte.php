@@ -70,4 +70,9 @@ class Reporte extends Model
     {
         return $this->belongsTo(Equipo::class);
     }
+
+    public function firmaRecibido() {
+        return $this->hasOne(Recibido_firma::class);
+    }
+
 }

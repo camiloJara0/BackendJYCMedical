@@ -14,7 +14,7 @@ class ComponenteController extends Controller
      */
     public function index()
     {
-        return Componente::get();
+        return Componente::with('sistema')->get();
     }
 
     /**
@@ -81,6 +81,8 @@ class ComponenteController extends Controller
      */
     public function destroy(Componente $componente)
     {
-        //
+        $componente->estado = 'inactivo';
+        $componente->save();
+        return $componente;
     }
 }

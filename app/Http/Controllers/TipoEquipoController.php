@@ -17,7 +17,7 @@ class TipoEquipoController extends Controller
      */
     public function index()
     {
-        return Tipo_equipo::where('estado', 'activo')->with('sistemas')->get();
+        return Tipo_equipo::with('sistemas')->get();
     }
 
     /**

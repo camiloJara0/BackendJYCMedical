@@ -131,14 +131,15 @@ class TecnicoController extends Controller
      */
     public function update(Request $request, Tecnico $tecnico)
     {
-        $tecnico = Tecnico::where('id', $request->id)->first();
         // Si ya existe un sello, lo borramos
         if ($request->hasFile('sello') && !empty($tecnico->sello)) {
             Storage::disk('public')->delete($tecnico->sello);
         }
 
-        if ($request->correo != $tecnico->correo){
-            
+        $usuario = User::where('id', $tecnico->user_id)->first();
+        if ($request->correo != $usuario->correo){
+            $usuario->correo = $request->correo;
+            $usuario-> save();
         }
 
         $selloPath = $tecnico->sello; // mantener el anterior si no se sube uno nuevo
@@ -153,10 +154,15 @@ class TecnicoController extends Controller
         }
 
         // Actualizamos todos los campos excepto sello
-        $data = $request->all();
+        $data = $request->only(['nombre', 'telefono', 'direccion']);
         $data['sello'] = $selloPath; // aseguramos que se guarde la ruta correcta
 
-        $tecnico->update($data);
+        // $tecnico->update($data);
+        $tecnico->nombre = $request->nombre;
+        $tecnico->telefono = $request->telefono;
+        $tecnico->direccion = $request->direccion;
+        $tecnico->sello = $selloPath;
+        $tecnico->save();
 
         return $tecnico;
 
@@ -173,8 +179,8 @@ class TecnicoController extends Controller
         if (!empty($tecnico->sello)) {
             Storage::disk('public')->delete($tecnico->sello);
         }
-        $Tecnico->estado = 'inactivo';
-        $Tecnico->save();
-        return $Tecnico;
+        $tecnico->estado = 'inactivo';
+        $tecnico->save();
+        return $tecnico;
     }
 }

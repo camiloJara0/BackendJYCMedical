@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Sistema;
+use App\Models\Componente;
 use Illuminate\Http\Request;
 
 class SistemaController extends Controller
@@ -81,9 +82,11 @@ class SistemaController extends Controller
      */
     public function destroy(Sistema $sistema)
     {
-        // Componente::where('sistema_id', $sistema->id)
-        //     ->delete();
+        Componente::where('sistema_id', $sistema->id)
+            ->update(['estado' => 'inactivo']);
         
-        // $sistema->delete();
+        $sistema->estado = 'inactivo';
+        $sistema->save();
+        return $sistema;
     }
 }

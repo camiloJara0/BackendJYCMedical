@@ -10,11 +10,15 @@ use App\Models\Repuesto;
 use App\Models\Accesorio;
 use App\Models\Tecnico;
 use App\Models\Estado_componente;
+use App\Models\Recibido_firma;
 use App\Models\Cita;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\FirmarReporte;
 use Illuminate\Http\Request;
 
 class ReporteController extends Controller
@@ -26,7 +30,8 @@ class ReporteController extends Controller
      */
     public function index()
     {
-        return Reporte::with('actividades', 'materiales', 'mediciones', 'repuestos', 'estado_componente.componente', 'cita', 'tecnico', 'cliente', 'equipo')->get();
+        return Reporte::with('actividades', 'materiales', 'mediciones', 'repuestos', 'estado_componente.componente', 'cita', 'tecnico', 'cliente', 'equipo')->
+        orderBy('fecha', 'desc')->get();
     }
 
     /**
@@ -101,16 +106,9 @@ class ReporteController extends Controller
                     ]);
             }
 
-            if(!empty($data['firma'])) {
-                $tecnico = Tecnico::where('id', $reporte->tecnico_id)->first();
-
-                // Si ya existe un sello previo, lo eliminamos
-                if (!empty($tecnico->sello)) {
-                    Storage::disk('public')->delete($tecnico->sello);
-                }
-
+            if(!empty($data['recibido']['firma'])) {
                 // Decodificar la firma en base64
-                $imageData = $data['firma'];
+                $imageData = $data['recibido']['firma'];
                 // Remover encabezado "data:image/png;base64,"
                 $imageData = preg_replace('#^data:image/\w+;base64,#i', '', $imageData);
                 $imageData = str_replace(' ', '+', $imageData);
@@ -118,15 +116,34 @@ class ReporteController extends Controller
 
                 // Nombre único
                 $filename = Str::random(20) . '.png';
-                $folder = 'tecnicos';
+                $folder = 'recibido';
                 $path = $folder . '/' . $filename;
 
                 // Guardar en disco public
                 Storage::disk('public')->put($path, $decoded);
 
                 // Actualizar el registro
-                $tecnico->update(['sello' => $path]);
+                Recibido_firma::create(array_merge($data['recibido'], [
+                    'firma' => $path,
+                    'reporte_id' => $reporte->id
+                ]));
 
+            } else {
+                $token = Str::random(64);
+
+                DB::table('personal_access_tokens')->insert([
+                    'tokenable_type' => Recibido_firma::class,
+                    'tokenable_id'   => $reporte->id, // registro relacionado
+                    'name'           => 'firma_recibido',
+                    'token'          => hash('sha256', $token), // se guarda hasheado
+                    'abilities'      => json_encode(['sign']),
+                    'expires_at'     => now()->addDays(7), // opcional: expira en 7 días
+                ]);
+
+                // Enviar por correo el enlace con el token plano
+                $url = "/FirmarReporte?token={$token}";
+
+                Mail::to($data['recibido']['correo'])->send(new FirmarReporte($reporte, $url));
             }
 
             DB::commit();
@@ -189,7 +206,7 @@ class ReporteController extends Controller
 
     public function imprimir($id)
     {
-        $reporte = Reporte::with('actividades', 'materiales', 'mediciones', 'repuestos', 'accesorios', 'estado_componente.componente.sistema', 'tecnico', 'cliente', 'equipo')->findOrFail($id);
+        $reporte = Reporte::with('actividades', 'materiales', 'mediciones', 'repuestos', 'accesorios', 'estado_componente.componente.sistema', 'tecnico', 'cliente', 'equipo', 'firmaRecibido')->findOrFail($id);
         
         $fileName = 'reporte_' . $reporte->id . '_' . $reporte->equipo->nombre . '.pdf';
         $pdf = \PDF::loadView('pdf.reporte', compact('reporte'));

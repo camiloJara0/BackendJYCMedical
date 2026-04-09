@@ -25,6 +25,7 @@ class CitaController extends Controller
             'tecnicos.nombre as nombre_tecnico',
             'clientes.nombre as nombre_cliente'
         )
+        ->orderBy('fecha', 'desc')
         ->get();
 
         return $citas;

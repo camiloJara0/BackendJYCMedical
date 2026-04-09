@@ -23,6 +23,7 @@ use App\Http\Controllers\TecnicoController;
 use App\Http\Controllers\TipoEquipoController;
 use App\Http\Controllers\RolController;
 use App\Http\Controllers\SeccionController;
+use App\Http\Controllers\RecibidoFirmaController;
 
 Route::get('/getproductos', [ProductoController::class, 'index']);
 Route::get('/getcategorias', [CategoriaController::class, 'index']);
@@ -30,8 +31,10 @@ Route::post('/solicitar_cotizacion', [SolicitudesCotizacionController::class, 's
 Route::post('/login', [UserController::class, 'login']);
 Route::post('/recuperarContraseña', [UserController::class, 'verificacion']);
 Route::post('/cambiarContraseña', [UserController::class, 'verificarCodigo']);
+Route::post('/aprobarToken', [UserController::class, 'aprobarToken']);
 Route::post('/cambiarContraseñaPrimerVez', [UserController::class, 'verificarCodigoPrimerVez']);
 Route::post('/primerIngreso', [UserController::class, 'verificarUsuario']);
+Route::apiResource('/recibido_firma', RecibidoFirmaController::class);
 
 Route::middleware(['auth:sanctum', 'check.token.expiration'])->group(function () {
     Route::apiResource('/productos', ProductoController::class);

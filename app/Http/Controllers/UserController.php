@@ -13,6 +13,7 @@ use App\Http\Request\Login;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {
@@ -240,5 +241,38 @@ class UserController extends Controller
         $registro->save();
 
         return response()->json(['success' => true, 'message' => 'Contraseña actualizada correctamente']);
+    }
+
+    public function aprobarToken(Request $request)
+    {
+        DB::beginTransaction();
+
+        try {
+            $hashed = hash('sha256', $request->token);
+            $token = DB::table('personal_access_tokens')
+                ->where('token', $hashed)
+                ->first();
+
+            if (!$token || $token->expires_at < now()) {
+                throw new \Exception("Solicitud inválida o ya usada");
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'id' => $token->tokenable_id,
+                'token' => $hashed
+            ], 200) ;
+
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 }
