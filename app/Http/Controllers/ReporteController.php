@@ -144,6 +144,9 @@ class ReporteController extends Controller
                 $url = "/FirmarReporte?token={$token}";
 
                 Mail::to($data['recibido']['correo'])->send(new FirmarReporte($reporte, $url));
+
+                $reporte->estado = 'En Revisión';
+                $reporte->save();
             }
 
             DB::commit();
@@ -201,7 +204,9 @@ class ReporteController extends Controller
      */
     public function destroy(Reporte $reporte)
     {
-        //
+        $reporte->estado = 'eliminada';
+        $reporte->save();
+        return $reporte;
     }
 
     public function imprimir($id)

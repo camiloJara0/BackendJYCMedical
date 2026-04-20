@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Recibido_firma;
+use App\Models\Reporte;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -75,6 +76,10 @@ class RecibidoFirmaController extends Controller
                     'firma' => $path,
                     'reporte_id' => $data['recibido']['reporte_id']
                 ]));
+
+                $reporte = Reporte::where('id', $data['recibido']['reporte_id'])->first();
+                $reporte->estado = 'realizada';
+                $reporte->save();
 
             }
 
