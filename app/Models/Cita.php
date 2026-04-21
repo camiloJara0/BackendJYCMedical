@@ -20,4 +20,9 @@ class Cita extends Model
         'hora',
         'estado'
     ];
+
+    public function ediciones()
+    {
+        return $this->hasMany(Historial_estados_cita::class, 'cita_id');
+    }
 }

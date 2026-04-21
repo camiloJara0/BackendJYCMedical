@@ -12,6 +12,8 @@ use App\Models\Tecnico;
 use App\Models\Estado_componente;
 use App\Models\Recibido_firma;
 use App\Models\Cita;
+use App\Models\Historial_estados_cita;
+use App\Models\Historial_estados_reporte;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Str;
@@ -100,10 +102,25 @@ class ReporteController extends Controller
 
             // Actualizar estado de la Cita
             if (!empty($data['cita'])) {
+                Historial_estados_cita::create([
+                    'cita_id' => $data['cita']['id'],
+                    'tecnico_id' => $reporte->tecnico_id ?? null,
+                    'nombre_estado' => 'realizada',
+                    'observaciones' => 'Reporte generado con ID: ' . $reporte->id
+                ]);
                 Cita::where('id', $data['cita']['id'] ?? null)
                     ->update([
                         'estado' => 'realizada',
                     ]);
+            }
+
+            if (!empty($data['reporte']['estado'])) {
+                Historial_estados_reporte::create([
+                    'reporte_id' => $reporte->id,
+                    'tecnico_id' => $reporte->tecnico_id ?? null,
+                    'nombre_estado' => $data['reporte']['estado'],
+                    'observaciones' => $data['estado']['observacion']
+                ]);
             }
 
             if(!empty($data['recibido']['firma'])) {
@@ -115,7 +132,7 @@ class ReporteController extends Controller
                 $decoded = base64_decode($imageData);
 
                 // Nombre único
-                $filename = Str::random(20) . '.png';
+                $filename = 'Firma' . $reporte->id . '.png';
                 $folder = 'recibido';
                 $path = $folder . '/' . $filename;
 

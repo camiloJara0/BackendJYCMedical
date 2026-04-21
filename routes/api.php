@@ -46,6 +46,7 @@ Route::middleware(['auth:sanctum', 'check.token.expiration'])->group(function ()
     Route::apiResource('/accesorio', AccesorioController::class);
     Route::apiResource('/actividad', ActividadController::class);
     Route::apiResource('/cita', CitaController::class);
+    Route::post('/eliminarCita', [CitaController::class, 'cancelar']);
     Route::apiResource('/componente', ComponenteController::class);
     Route::apiResource('/equipo', EquipoController::class);
     Route::apiResource('/estado_componente', EstadoComponenteController::class);
