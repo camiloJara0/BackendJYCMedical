@@ -32,7 +32,7 @@ class ReporteController extends Controller
      */
     public function index()
     {
-        return Reporte::with('actividades', 'materiales', 'mediciones', 'repuestos', 'estado_componente.componente', 'cita', 'tecnico', 'cliente', 'equipo')->
+        return Reporte::with('actividades', 'materiales', 'mediciones', 'repuestos', 'accesorios', 'estado_componente.componente', 'tecnico', 'cliente', 'equipo', 'firmaRecibido', 'historialEstadosReporte')->
         orderBy('fecha', 'desc')->get();
     }
 
@@ -114,15 +114,6 @@ class ReporteController extends Controller
                     ]);
             }
 
-            if (!empty($data['reporte']['estado'])) {
-                Historial_estados_reporte::create([
-                    'reporte_id' => $reporte->id,
-                    'tecnico_id' => $reporte->tecnico_id ?? null,
-                    'nombre_estado' => $data['reporte']['estado'],
-                    'observaciones' => $data['estado']['observacion']
-                ]);
-            }
-
             if(!empty($data['recibido']['firma'])) {
                 // Decodificar la firma en base64
                 $imageData = $data['recibido']['firma'];
@@ -164,6 +155,18 @@ class ReporteController extends Controller
 
                 $reporte->estado = 'En Revisión';
                 $reporte->save();
+            }
+
+            if (!empty($data['reporte']['estado'])) {
+                $reporte->estado = $data['reporte']['estado'];
+                $reporte->save();
+
+                Historial_estados_reporte::create([
+                    'reporte_id' => $reporte->id,
+                    'tecnico_id' => $reporte->tecnico_id ?? null,
+                    'nombre_estado' => $data['reporte']['estado'],
+                    'observaciones' => $data['estado']['observacion']
+                ]);
             }
 
             DB::commit();
@@ -210,7 +213,122 @@ class ReporteController extends Controller
      */
     public function update(Request $request, Reporte $reporte)
     {
-        //
+        DB::beginTransaction();
+
+        try {
+            $data = $request->all();
+            $ids = [];
+
+            $actividad = Actividad::where('reporte_id', $reporte->id)->first();
+            $actividad->update([
+                'descripcion' => $data['actividades'],
+            ]);
+            $ids['Actividad'] = $actividad->id;
+
+            $ids['Materiales'] = [];
+            foreach ($data['materiales'] ?? [] as $material) {
+                $nuevo = Material::updateOrCreate(
+                    ['id' => $material['id'] ?? null], // condición de búsqueda
+                    [...$material, 'reporte_id' => $reporte->id] // datos a actualizar/crear
+                );
+                $ids['Materiales'][] = $nuevo->id;
+            }
+
+            $ids['Mediciones'] = [];
+            foreach ($data['mediciones'] ?? [] as $medicion) {
+                $nuevo = Medicion::updateOrCreate(
+                    ['id' => $medicion['id'] ?? null],
+                    [...$medicion, 'reporte_id' => $reporte->id]
+                );
+                $ids['Mediciones'][] = $nuevo->id;
+            }
+
+            $ids['Accesorios'] = [];
+            foreach ($data['accesorios'] ?? [] as $accesorio) {
+                $nuevo = Accesorio::updateOrCreate(
+                    ['id' => $accesorio['id'] ?? null],
+                    [...$accesorio, 'reporte_id' => $reporte->id]
+                );
+                $ids['Accesorios'][] = $nuevo->id;
+            }
+
+            $ids['Repuestos'] = [];
+            foreach ($data['repuestos'] ?? [] as $repuesto) {
+                $nuevo = Repuesto::updateOrCreate(
+                    ['id' => $repuesto['id'] ?? null],
+                    [...$repuesto, 'reporte_id' => $reporte->id]
+                );
+                $ids['Repuestos'][] = $nuevo->id;
+            }
+
+
+            if (!empty($data['reporte']['estado'])) {
+                
+                Historial_estados_reporte::create([
+                    'reporte_id' => $reporte->id,
+                    'tecnico_id' => $reporte->tecnico_id ?? null,
+                    'nombre_estado' => $data['reporte']['estado'],
+                    'observaciones' => $data['estado']['observacion']
+                    ]);
+                $reporte->estado = $data['reporte']['estado'];
+                $reporte->save();
+            }
+
+            if(!empty($data['recibido']['firma'])) {
+                // Decodificar la firma en base64
+                $imageData = $data['recibido']['firma'];
+                // Remover encabezado "data:image/png;base64,"
+                $imageData = preg_replace('#^data:image/\w+;base64,#i', '', $imageData);
+                $imageData = str_replace(' ', '+', $imageData);
+                $decoded = base64_decode($imageData);
+
+                // Nombre único
+                $filename = 'Firma' . $reporte->id . '.png';
+                $folder = 'recibido';
+                $path = $folder . '/' . $filename;
+
+                // Guardar en disco public
+                Storage::disk('public')->put($path, $decoded);
+
+                // Actualizar el registro
+                $recibido = Recibido_firma::where('reporte_id', $reporte->id)->first();
+                Recibido_firma::update(array_merge($data['recibido'], [
+                    'firma' => $path,
+                ]));
+
+            } else {
+                $token = Str::random(64);
+
+                DB::table('personal_access_tokens')->insert([
+                    'tokenable_type' => Recibido_firma::class,
+                    'tokenable_id'   => $reporte->id, // registro relacionado
+                    'name'           => 'firma_recibido',
+                    'token'          => hash('sha256', $token), // se guarda hasheado
+                    'abilities'      => json_encode(['sign']),
+                    'expires_at'     => now()->addDays(7), // opcional: expira en 7 días
+                ]);
+
+                // Enviar por correo el enlace con el token plano
+                $url = "/FirmarReporte?token={$token}";
+
+                Mail::to($data['recibido']['correo'])->send(new FirmarReporte($reporte, $url));
+
+                $reporte->estado = 'En Revisión';
+                $reporte->save();
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true, 
+                'ids' => $ids,
+            ], 201);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['error' => 'Error al guardar Reporte', 'message' => $e->getMessage()], 500);
+        }
+
     }
 
     /**
@@ -229,6 +347,30 @@ class ReporteController extends Controller
     public function imprimir($id)
     {
         $reporte = Reporte::with('actividades', 'materiales', 'mediciones', 'repuestos', 'accesorios', 'estado_componente.componente.sistema', 'tecnico', 'cliente', 'equipo', 'firmaRecibido')->findOrFail($id);
+        
+        $fileName = 'reporte_' . $reporte->id . '_' . $reporte->equipo->nombre . '.pdf';
+        $pdf = \PDF::loadView('pdf.reporte', compact('reporte'));
+        return response($pdf->output(), 200)
+            ->header('Content-Type', 'application/pdf')
+            ->header('Access-Control-Allow-Origin', '*')
+            ->header('Access-Control-Expose-Headers', 'Content-Disposition')
+            ->header('Content-Disposition', 'attachment; filename="' . $fileName . '"');
+    }
+
+    public function imprimirConTokenEspecial(Request $request)
+    {
+        $tokenPlano = $request->bearerToken();
+        $hashed = hash('sha256', $tokenPlano);
+
+        $token = DB::table('personal_access_tokens')
+            ->where('token', $hashed)
+            ->first();
+
+        if (!$token) {
+            return response()->json(['success' => false, 'message' => 'Token inválido'], 403);
+        }
+
+        $reporte = Reporte::with('actividades', 'materiales', 'mediciones', 'repuestos', 'accesorios', 'estado_componente.componente.sistema', 'tecnico', 'cliente', 'equipo', 'firmaRecibido')->findOrFail($request->id);
         
         $fileName = 'reporte_' . $reporte->id . '_' . $reporte->equipo->nombre . '.pdf';
         $pdf = \PDF::loadView('pdf.reporte', compact('reporte'));

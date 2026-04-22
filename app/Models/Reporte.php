@@ -75,4 +75,9 @@ class Reporte extends Model
         return $this->hasOne(Recibido_firma::class);
     }
 
+    public function historialEstadosReporte()
+    {
+        return $this->hasMany(Historial_estados_reporte::class);
+    }
+
 }

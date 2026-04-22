@@ -34,7 +34,9 @@ Route::post('/cambiarContraseña', [UserController::class, 'verificarCodigo']);
 Route::post('/aprobarToken', [UserController::class, 'aprobarToken']);
 Route::post('/cambiarContraseñaPrimerVez', [UserController::class, 'verificarCodigoPrimerVez']);
 Route::post('/primerIngreso', [UserController::class, 'verificarUsuario']);
+
 Route::apiResource('/recibido_firma', RecibidoFirmaController::class);
+Route::post('/reporteRealizado/{id}/pdf', [ReporteController::class, 'imprimirConTokenEspecial']);
 
 Route::middleware(['auth:sanctum', 'check.token.expiration'])->group(function () {
     Route::apiResource('/productos', ProductoController::class);
