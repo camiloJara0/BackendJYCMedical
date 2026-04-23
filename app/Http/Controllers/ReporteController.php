@@ -33,7 +33,8 @@ class ReporteController extends Controller
     public function index()
     {
         return Reporte::with('actividades', 'materiales', 'mediciones', 'repuestos', 'accesorios', 'estado_componente.componente', 'tecnico', 'cliente', 'equipo', 'firmaRecibido', 'historialEstadosReporte')->
-        orderBy('fecha', 'desc')->get();
+        orderBy('fecha', 'desc')->orderBy('id', 'desc')
+        ->get();
     }
 
     /**

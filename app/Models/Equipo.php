@@ -19,6 +19,7 @@ class Equipo extends Model
         'modelo',
         'serie',
         'ubicacion',
-        'placa'
+        'placa',
+        'registro_sanitario'
     ];
 }

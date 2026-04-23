@@ -72,6 +72,7 @@
 
         .component-table,
         .component-table th,
+        .component-table tr,
         .component-table td {
             border: none !important;
         }
@@ -86,17 +87,22 @@
         <table style="width:100%;">
             <tr>
                 <td style="width:60%;">
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <img src="{{ public_path('logo.png') }}" style="width:55px;" />
-                        <div>
-                            <h2 style="margin:0; color:#2262a3; text-transform:uppercase; font-size:16px;">
-                                Reporte de Mantenimiento
-                            </h2>
-                            <p style="margin:0; font-size:11px; color:#6b7280;">
-                                Equipos Biomédicos
-                            </p>
-                        </div>
-                    </div>
+                    <table class="component-table" style="width:100%; border-collapse:collapse;">
+                        <tr>
+                            <td style="width:70%; vertical-align:middle;">
+                                <img src="{{ public_path('logo.png') }}" style="width:55px;" />
+                                <h2 style="margin:0; color:#2262a3; text-transform:uppercase; font-size:16px;">
+                                    Reporte de Mantenimiento
+                                </h2>
+                                <p style="margin:0; font-size:11px; color:#6b7280;">
+                                    Tipo de Mantenimiento - {{ $reporte->tipo }}
+                                </p>
+                            </td>
+                            <td style="width:30%; text-align:right; vertical-align:middle;">
+                                <img src="{{ public_path('jyc_logo.png') }}" style="width:40px;" />
+                            </td>
+                        </tr>
+                    </table>
                 </td>
 
                 <td style="width:40%; text-align:right; font-size:11px;">
