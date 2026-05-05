@@ -5,85 +5,88 @@
     <meta charset="UTF-8">
     <title>Reporte de Reparación</title>
     <style>
-        body {
-            font-family: DejaVu Sans, sans-serif;
-            font-size: 12px;
-        }
+    body {
+        font-family: DejaVu Sans, sans-serif;
+        font-size: 12px;
+    }
 
-        h1,
-        h2,
-        h3 {
-            margin: 5px 0;
-        }
+    h1,
+    h2,
+    h3 {
+        margin: 5px 0;
+    }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 15px;
-        }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 15px;
+    }
 
-        th,
-        td {
-            border: 1px solid #000;
-            padding: 5px;
-            text-align: left;
-        }
+    th,
+    td {
+        border: 1px solid #000;
+        padding: 5px;
+        text-align: left;
+    }
 
-        .system-title {
-            background-color: #f0f0f0;
-            font-weight: bold;
-        }
+    .system-title {
+        background-color: #f0f0f0;
+        font-weight: bold;
+    }
 
-        body {
-            font-family: Arial, sans-serif;
-            color: #333;
-        }
+    body {
+        font-family: Arial, sans-serif;
+        color: #333;
+    }
 
-        td,
-        th {
-            border: 1px solid #ddd;
-            padding: 5px;
-            font-size: 10px;
-        }
+    td,
+    th {
+        border: 1px solid #ddd;
+        padding: 5px;
+        font-size: 10px;
+    }
 
-        h3 {
-            font-size: 13px;
-            font-weight: bold;
-            margin-bottom: 10px;
-            border-bottom: 1px solid #000;
-            padding-bottom: 5px;
-        }
+    h3 {
+        font-size: 13px;
+        font-weight: bold;
+        margin-bottom: 10px;
+        border-bottom: 1px solid #000;
+        padding-bottom: 5px;
+    }
 
-        @page {
-            margin: 140px 40px 60px 40px;
-        }
+    @page {
+        margin: 150px 40px 60px 40px;
+    }
 
-        header {
-            position: fixed;
-            top: -120px;
-            left: 0;
-            right: 0;
-            height: 80px;
-        }
+    header {
+        position: fixed;
+        top: -130px;
+        left: 0;
+        right: 0;
+        height: 90px;
+    }
 
-        .pagenum:before {
-            content: counter(page);
-        }
+    .pagenum:before {
+        content: counter(page);
+    }
 
-        .component-table,
-        .component-table th,
-        .component-table tr,
-        .component-table td {
-            border: none !important;
-        }
+    .pagecount:before {
+        content: counter(pages);
+    }
 
+    .component-table,
+    .component-table th,
+    .component-table tr,
+    .component-table td {
+        border: none !important;
+    }
     </style>
 </head>
 
 <body style="font-family: Arial, sans-serif; font-size: 12px; color: #1f2937;">
 
     <!-- HEADER PROFESIONAL -->
-    <header style="border-bottom: 3px solid #2262a3; padding-bottom: 10px; margin-bottom: 20px;">
+    <header style="padding-bottom: 10px; margin-bottom: 20px;">
         <table style="width:100%;">
             <tr>
                 <td style="width:60%;">
@@ -99,7 +102,7 @@
                                 </p>
                             </td>
                             <td style="width:30%; text-align:right; vertical-align:middle;">
-                                <img src="{{ public_path('jyc_logo.png') }}" style="width:40px;" />
+                                <img src="{{ public_path('jyc_logo.png') }}" style="width:80px;" />
                             </td>
                         </tr>
                     </table>
@@ -109,13 +112,13 @@
                     <p><strong>Código:</strong> FOR-MAN-001</p>
                     <p><strong>Fecha:</strong> {{ $reporte->fecha }}</p>
                     <p><strong style="font-size: 12px;">Reporte No:</strong> <span
-                            style="color: #bc2e15; font-size: 12px;">{{ $reporte->id }}</span>. <strong>Página:</strong>
-                        <span class="pagenum"></span>
+                            style="color: #bc2e15; font-size: 12px;">{{ $reporte->id }}</span>.
+                            <strong>Página:</strong><span class="pagenum"></span> de <span>{{ $totalPages }}</span>
                     </p>
                 </td>
             </tr>
         </table>
-        <div style="height:65px;"></div>
+        <div style="height:75px;"></div>
     </header>
 
     <!-- INFORMACIÓN DEL EQUIPO -->
@@ -134,6 +137,11 @@
                 <td><strong>Serie:</strong> {{ $reporte->equipo->serie }}</td>
                 <td><strong>Ubicación:</strong> {{ $reporte->equipo->ubicacion }}</td>
                 <td><strong>Placa:</strong> {{ $reporte->equipo->placa }}</td>
+            </tr>
+            <tr>
+                <td><strong>Nombre del cliente:</strong> {{ $reporte->cliente->nombre }}</td>
+                <td><strong>Telefono del cliente:</strong> {{ $reporte->cliente->telefono }}</td>
+                <td><strong>Correo del cliente:</strong> {{ $reporte->cliente->correo }}</td>
             </tr>
         </table>
     </section>
@@ -229,7 +237,7 @@
         <thead>
             <tr>
                 <th colspan="2" style="padding:6px; text-align:left; color:#2262a3; font-size: 13px;">
-                    Materiales Utilizados
+                    Set/Equipo Patron/Materiales Utilizados
                 </th>
             </tr>
             <tr style="background:#f3f4f6;">
@@ -252,7 +260,7 @@
         <thead>
             <tr>
                 <th colspan="2" style="padding:6px; text-align:left; color:#2262a3; font-size: 13px;">
-                    Mediciones
+                    Mediciones Realizadas
                 </th>
             </tr>
             <tr style="background:#f3f4f6;">
@@ -279,7 +287,7 @@
         <thead>
             <tr>
                 <th colspan="2" style="padding:6px; text-align:left; color:#2262a3; font-size: 13px;">
-                    Accesorios Requeridos
+                    Repuestos/Accesorios Requeridos
                 </th>
             </tr>
         </thead>
@@ -316,27 +324,31 @@
             <tr>
                 <td style="text-align:center; width:50%;">
                     <div style="border-top:1px solid #000; padding-top:5px;">
-                        Nombre:<strong style="border-bottom: 1px solid #a3a3a3; "> {{ $reporte->tecnico->nombre }}</strong><br>
+                        Nombre:<strong style="border-bottom: 1px solid #a3a3a3; ">
+                            {{ $reporte->tecnico->nombre }}</strong><br>
                         @if($reporte->tecnico->sello)
                         <img src="{{ public_path('storage/'.$reporte->tecnico->sello) }}"
                             style="width:60px; height:60px; object-fit:contain;" /><br>
                         @else
                         Firma:<strong> ________________________________________</strong><br>
                         @endif
-                        Cargo:<span style="border-bottom: 1px solid #a3a3a3; "> {{ $reporte->tecnico->rol ?? 'N/A' }}</span><br>
+                        Cargo:<span style="border-bottom: 1px solid #a3a3a3; ">
+                            {{ $reporte->tecnico->rol ?? 'N/A' }}</span><br>
                         <small>Realizado por</small>
                     </div>
                 </td>
                 <td style="text-align:center; width:50%;">
                     <div style="border-top:1px solid #000; padding-top:5px;">
-                        Nombre: <strong style="border-bottom: 1px solid #a3a3a3; ">{{ $reporte->firmaRecibido->nombre ?? 'N/A' }}</strong><br>
+                        Nombre: <strong
+                            style="border-bottom: 1px solid #a3a3a3; ">{{ $reporte->firmaRecibido->nombre ?? 'N/A' }}</strong><br>
                         @if($reporte->firmaRecibido && $reporte->firmaRecibido->firma)
-                            <img src="{{ public_path('storage/'.$reporte->firmaRecibido->firma) }}" 
-                                style="width:60px; height:60px; object-fit:contain;" /><br>
+                        <img src="{{ public_path('storage/'.$reporte->firmaRecibido->firma) }}"
+                            style="width:60px; height:60px; object-fit:contain;" /><br>
                         @else
-                            Firma: ________________________________________ <br>
+                        Firma: ________________________________________ <br>
                         @endif
-                        Cargo:<strong style="border-bottom: 1px solid #a3a3a3; ">{{ $reporte->firmaRecibido->cargo ?? 'N/A' }}</strong><br>
+                        Cargo:<strong
+                            style="border-bottom: 1px solid #a3a3a3; ">{{ $reporte->firmaRecibido->cargo ?? 'N/A' }}</strong><br>
                         <small>Recibido por</small>
                     </div>
                 </td>

@@ -138,24 +138,36 @@ class ReporteController extends Controller
                 ]));
 
             } else {
-                $token = Str::random(64);
+                // Aquí separas los correos por coma
+                $correos = explode(',', $data['recibido']['correo']);
 
-                DB::table('personal_access_tokens')->insert([
-                    'tokenable_type' => Recibido_firma::class,
-                    'tokenable_id'   => $reporte->id, // registro relacionado
-                    'name'           => 'firma_recibido',
-                    'token'          => hash('sha256', $token), // se guarda hasheado
-                    'abilities'      => json_encode(['sign']),
-                    'expires_at'     => now()->addDays(7), // opcional: expira en 7 días
-                ]);
+                // Limpias espacios en blanco
+                $correos = array_map('trim', $correos);
 
-                // Enviar por correo el enlace con el token plano
-                $url = "/FirmarReporte?token={$token}";
+                // Envías a cada correo
+                foreach ($correos as $correo) {
+                    if (!empty($correo) && filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+                        $token = Str::random(64);
 
-                Mail::to($data['recibido']['correo'])->send(new FirmarReporte($reporte, $url));
+                        DB::table('personal_access_tokens')->insert([
+                            'tokenable_type' => Recibido_firma::class,
+                            'tokenable_id'   => $reporte->id, // registro relacionado
+                            'name'           => 'firma_recibido',
+                            'token'          => hash('sha256', $token), // se guarda hasheado
+                            'abilities'      => json_encode(['sign']),
+                            'expires_at'     => now()->addDays(7), // opcional: expira en 7 días
+                        ]);
 
-                $reporte->estado = 'En Revisión';
-                $reporte->save();
+                        // Enviar por correo el enlace con el token plano
+                        $url = "/FirmarReporte?token={$token}";
+
+                        // Enviar correo individual
+                        Mail::to($correo)->send(new FirmarReporte($reporte, $url));
+                    }
+                }
+
+                $data['reporte']['estado'] = $data['reporte']['estado'] == 'realizada' ? 'En Revisión' : $data['reporte']['estado'];
+
             }
 
             if (!empty($data['reporte']['estado'])) {
@@ -348,9 +360,19 @@ class ReporteController extends Controller
     public function imprimir($id)
     {
         $reporte = Reporte::with('actividades', 'materiales', 'mediciones', 'repuestos', 'accesorios', 'estado_componente.componente.sistema', 'tecnico', 'cliente', 'equipo', 'firmaRecibido')->findOrFail($id);
-        
+        $totalPages = 1; // Valor inicial, se actualizará después de renderizar
         $fileName = 'reporte_' . $reporte->id . '_' . $reporte->equipo->nombre . '.pdf';
-        $pdf = \PDF::loadView('pdf.reporte', compact('reporte'));
+        // 1. Renderizar una vez para calcular páginas
+        $pdfTemp = \PDF::loadView('pdf.reporte', compact('reporte', 'totalPages'));
+        $pdfTemp->render();
+        $totalPages = $pdfTemp->getDomPDF()->getCanvas()->get_page_count();
+
+        // 2. Volver a cargar la vista con la variable $totalPages
+        $pdf = \PDF::loadView('pdf.reporte', [
+            'reporte' => $reporte,
+            'totalPages' => $totalPages
+        ]);
+
         return response($pdf->output(), 200)
             ->header('Content-Type', 'application/pdf')
             ->header('Access-Control-Allow-Origin', '*')

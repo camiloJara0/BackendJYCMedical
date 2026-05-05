@@ -20,7 +20,7 @@ class UserSeeder extends Seeder
             [
                 'nombre' => 'Administrador General',
                 'correo' => 'admin@jycmedical.com',
-                'contraseña' => Hash::make('password'),
+                'contraseña' => Hash::make('admin2026*'),
                 'rol' => 'Admin',
                 'estado' => 'activo',
             ],

@@ -6,6 +6,7 @@ use App\Models\solicitudes_cotizacion;
 use App\Models\cotizacion_detalle;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\cotizacionRecibida;
+use App\Mail\cotizacionRespuesta;
 use Illuminate\Http\Request;
 
 class SolicitudesCotizacionController extends Controller
@@ -118,15 +119,18 @@ class SolicitudesCotizacionController extends Controller
 
         $solicitudes_cotizacion->fecha_respuesta = now();
         $solicitudes_cotizacion->estado = $request->estado;
-        $solicitudes_cotizacion->observaciones_admin = $request->observaciones_admin;
+        $solicitudes_cotizacion->observaciones_admin = $request->observaciones_admin . " Monto: " . $request->monto;
 
         $solicitudes_cotizacion->save();
+
+        if($request->estado == 'atendida'){
+            Mail::to($solicitudes_cotizacion->correo)->send(new cotizacionRespuesta($solicitudes_cotizacion, $request, $request->file('archivo')));
+        }
 
         return response()->json([
             'success' => true,
             'data' => $solicitudes_cotizacion->fresh()
         ]);
-
 
     }
 
