@@ -50,6 +50,10 @@ class ProductoController extends Controller
             'stock' => 'nullable|integer|min:0',
             'precio_referencial' => 'nullable|numeric|min:0',
             'categoria_id' => 'nullable|integer|exists:categorias,id',
+            'marca' => 'nullable|string|max:255',
+            'modelo' => 'nullable|string|max:255',
+            'compatibilidad' => 'nullable|string|max:255',
+            'tipo_conector' => 'nullable|string|max:255',
             'imagen' => 'nullable|file|mimes:png,jpg,jpeg,webp|max:5120', // max 5MB
         ]);
 
@@ -79,6 +83,10 @@ class ProductoController extends Controller
             'stock' => $request->stock,
             'precio_referencial' => $request->precio_referencial,
             'categoria_id' => $request->categoria_id,
+            'marca' => $request->marca,
+            'modelo' => $request->modelo,
+            'compatibilidad' => $request->compatibilidad,
+            'tipo_conector' => $request->tipo_conector,
             'imagen' => $imagenPath, // columna en DB
         ]);
 
@@ -149,6 +157,10 @@ class ProductoController extends Controller
         $producto->stock = $request->stock;
         $producto->categoria_id = $request->categoria_id;
         $producto->imagen = $imagenPath; // columna en DB
+        $producto->marca = $request->marca;
+        $producto->modelo = $request->modelo;
+        $producto->compatibilidad = $request->compatibilidad;
+        $producto->tipo_conector = $request->tipo_conector;
         $producto->save();
 
         return response()->json([
