@@ -78,7 +78,7 @@ class SolicitudesCotizacionController extends Controller
 
             // Enviar correo con adjunto
             try {
-                Mail::to('camilojara0000@gmail.com')->send(new CotizacionRecibida($solicitud, $imagenFile));
+                Mail::to('jcmedicalinfo@gmail.com')->send(new CotizacionRecibida($solicitud, $imagenFile));
             } catch (\Exception $e) {
                 Log::error('Error enviando correo: '.$e->getMessage());
 
