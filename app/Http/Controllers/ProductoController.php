@@ -63,8 +63,8 @@ class ProductoController extends Controller
         if ($request->hasFile('imagen') && $request->file('imagen')->isValid()) {
             $file = $request->file('imagen');
 
-            // Nombre seguro y único
-            $filename = Str::random(20) . '.' . $file->getClientOriginalExtension();
+            // Nombre original del archivo
+            $filename = $file->getClientOriginalName();
 
             // Carpeta dentro del disco public
             $folder = 'productos';
@@ -144,7 +144,7 @@ class ProductoController extends Controller
                 Storage::disk('public')->delete($producto->imagen);
             }
             $file = $request->file('imagen');
-            $filename = Str::random(20) . '.' . $file->getClientOriginalExtension();
+            $filename = $file->getClientOriginalName();
             $folder = 'productos';
             $path = $file->storeAs($folder, $filename, 'public');
             $imagenPath = $path;
