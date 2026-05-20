@@ -1,8 +1,3 @@
-@php
-    $baseUrl = rtrim(config('app.frontend_url'), '/');
-    $path = ltrim($url, '/');
-@endphp
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -34,7 +29,7 @@
                     <!-- Botón de acción -->
                     <tr>
                         <td align="center" style="padding: 20px;">
-                            <a href="{{ $baseUrl }}/{{ $path }}"
+                            <a href="{{ rtrim(config('app.frontend_url'), '/') }}/{{ ltrim($url, '/') }}"
                                style="display:inline-block; background-color:#007bff; color:#ffffff; text-decoration:none; padding:12px 24px; border-radius:4px; font-weight:bold;">
                                 Firmar Reporte
                             </a>
