@@ -405,10 +405,20 @@ class ReporteController extends Controller
             return response()->json(['success' => false, 'message' => 'Token inválido'], 403);
         }
 
+
+
         $reporte = Reporte::with('actividades', 'materiales', 'mediciones', 'repuestos', 'accesorios', 'estado_componente.componente.sistema', 'tecnico', 'cliente', 'equipo', 'firmaRecibido')->findOrFail($request->id);
-        
+        $totalPages = 1;
         $fileName = 'reporte_' . $reporte->id . '_' . $reporte->equipo->nombre . '.pdf';
-        $pdf = \PDF::loadView('pdf.reporte', compact('reporte'));
+
+        $pdfTemp = \PDF::loadView('pdf.reporte', compact('reporte', 'totalPages'));
+        $pdfTemp->render();
+        $totalPages = $pdfTemp->getDomPDF()->getCanvas()->get_page_count();
+
+        $pdf = \PDF::loadView('pdf.reporte', [
+            'reporte' => $reporte,
+            'totalPages' => $totalPages
+        ]);
         return response($pdf->output(), 200)
             ->header('Content-Type', 'application/pdf')
             ->header('Access-Control-Allow-Origin', '*')
