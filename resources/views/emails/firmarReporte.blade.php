@@ -29,7 +29,7 @@
                     <!-- Botón de acción -->
                     <tr>
                         <td align="center" style="padding: 20px;">
-                            <a href="{{ rtrim(config('app.frontend_url'), '/') }}/app{{ ltrim($url, '/') }}"
+                            <a href="{{ rtrim(config('app.frontend_url'), '/') }}/app/{{ ltrim($url, '/') }}"
                                style="display:inline-block; background-color:#007bff; color:#ffffff; text-decoration:none; padding:12px 24px; border-radius:4px; font-weight:bold;">
                                 Firmar Reporte
                             </a>
