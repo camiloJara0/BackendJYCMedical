@@ -6,8 +6,8 @@ use App\Models\solicitudes_cotizacion;
 use App\Models\cotizacion_detalle;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
-use App\Mail\cotizacionRecibida;
-use App\Mail\cotizacionRespuesta;
+use App\Mail\CotizacionRecibida;
+use App\Mail\CotizacionRespuesta;
 use Illuminate\Http\Request;
 
 class SolicitudesCotizacionController extends Controller
@@ -77,9 +77,8 @@ class SolicitudesCotizacionController extends Controller
 
 
             // Enviar correo con adjunto
-            // Mail::to('camilojara0000@gmail.com')->send(new cotizacionRecibida($solicitud, $imagenFile));
             try {
-                Mail::to('camilojara0000@gmail.com')->send(new cotizacionRecibida($solicitud, $imagenFile));
+                Mail::to('camilojara0000@gmail.com')->send(new CotizacionRecibida($solicitud, $imagenFile));
             } catch (\Exception $e) {
                 Log::error('Error enviando correo: '.$e->getMessage());
 
@@ -136,7 +135,7 @@ class SolicitudesCotizacionController extends Controller
         $solicitudes_cotizacion->save();
 
         if($request->estado == 'atendida'){
-            Mail::to($solicitudes_cotizacion->correo)->send(new cotizacionRespuesta($solicitudes_cotizacion, $request, $request->file('archivo')));
+            Mail::to($solicitudes_cotizacion->correo)->send(new CotizacionRespuesta($solicitudes_cotizacion, $request, $request->file('archivo')));
         }
 
         return response()->json([
