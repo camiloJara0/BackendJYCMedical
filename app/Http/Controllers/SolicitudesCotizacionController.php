@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\solicitudes_cotizacion;
 use App\Models\cotizacion_detalle;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 use App\Mail\cotizacionRecibida;
 use App\Mail\cotizacionRespuesta;
 use Illuminate\Http\Request;
@@ -76,7 +77,18 @@ class SolicitudesCotizacionController extends Controller
 
 
             // Enviar correo con adjunto
-            Mail::to('camilojara0000@gmail.com')->send(new cotizacionRecibida($solicitud, $imagenFile));
+            // Mail::to('camilojara0000@gmail.com')->send(new cotizacionRecibida($solicitud, $imagenFile));
+            try {
+                Mail::to('camilojara0000@gmail.com')->send(new cotizacionRecibida($solicitud, $imagenFile));
+            } catch (\Exception $e) {
+                Log::error('Error enviando correo: '.$e->getMessage());
+
+                return response()->json([
+                    'success' => false,
+                    'error' => 'No se pudo enviar el correo',
+                    'details' => $e->getMessage()
+                ], 500);
+            }
 
             return response()->json([
                 'success' => true,
