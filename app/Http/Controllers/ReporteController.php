@@ -359,25 +359,36 @@ class ReporteController extends Controller
 
     public function imprimir($id)
     {
-        $reporte = Reporte::with('actividades', 'materiales', 'mediciones', 'repuestos', 'accesorios', 'estado_componente.componente.sistema', 'tecnico', 'cliente', 'equipo', 'firmaRecibido')->findOrFail($id);
-        $totalPages = 1; // Valor inicial, se actualizará después de renderizar
-        $fileName = 'reporte_' . $reporte->id . '_' . $reporte->equipo->nombre . '.pdf';
-        // 1. Renderizar una vez para calcular páginas
-        $pdfTemp = \PDF::loadView('pdf.reporte', compact('reporte', 'totalPages'));
-        $pdfTemp->render();
-        $totalPages = $pdfTemp->getDomPDF()->getCanvas()->get_page_count();
+        try {
+            $reporte = Reporte::with('actividades', 'materiales', 'mediciones', 'repuestos', 'accesorios', 'estado_componente.componente.sistema', 'tecnico', 'cliente', 'equipo', 'firmaRecibido')->findOrFail($id);
 
-        // 2. Volver a cargar la vista con la variable $totalPages
-        $pdf = \PDF::loadView('pdf.reporte', [
-            'reporte' => $reporte,
-            'totalPages' => $totalPages
-        ]);
+            $totalPages = 1;
+            $fileName = 'reporte_' . $reporte->id . '_' . $reporte->equipo->nombre . '.pdf';
 
-        return response($pdf->output(), 200)
-            ->header('Content-Type', 'application/pdf')
-            ->header('Access-Control-Allow-Origin', '*')
-            ->header('Access-Control-Expose-Headers', 'Content-Disposition')
-            ->header('Content-Disposition', 'attachment; filename="' . $fileName . '"');
+            $pdfTemp = \PDF::loadView('pdf.reporte', compact('reporte', 'totalPages'));
+            $pdfTemp->render();
+            $totalPages = $pdfTemp->getDomPDF()->getCanvas()->get_page_count();
+
+            $pdf = \PDF::loadView('pdf.reporte', [
+                'reporte' => $reporte,
+                'totalPages' => $totalPages
+            ]);
+
+            return response($pdf->output(), 200)
+                ->header('Content-Type', 'application/pdf')
+                ->header('Access-Control-Allow-Origin', '*')
+                ->header('Access-Control-Expose-Headers', 'Content-Disposition')
+                ->header('Content-Disposition', 'attachment; filename="' . $fileName . '"');
+
+        } catch (\Exception $e) {
+            Log::error('Error generando PDF: '.$e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'error' => 'No se pudo generar el PDF',
+                'details' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function imprimirConTokenEspecial(Request $request)

@@ -136,7 +136,18 @@ class SolicitudesCotizacionController extends Controller
         $solicitudes_cotizacion->save();
 
         if($request->estado == 'atendida'){
-            Mail::to($solicitudes_cotizacion->correo)->send(new cotizacionRespuesta($solicitudes_cotizacion, $request, $request->file('archivo')));
+            try {
+                Mail::to($solicitudes_cotizacion->correo)
+                    ->send(new cotizacionRespuesta($solicitudes_cotizacion, $request, $request->file('archivo')));
+            } catch (\Exception $e) {
+                \Log::error('Error enviando correo con archivo: '.$e->getMessage());
+                return response()->json([
+                    'success' => false,
+                    'error' => 'No se pudo enviar el correo',
+                    'details' => $e->getMessage()
+                ], 500);
+            }
+            // Mail::to($solicitudes_cotizacion->correo)->send(new cotizacionRespuesta($solicitudes_cotizacion, $request, $request->file('archivo')));
         }
 
         return response()->json([
