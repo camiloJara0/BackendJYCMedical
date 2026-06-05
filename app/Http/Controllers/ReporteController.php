@@ -116,59 +116,61 @@ class ReporteController extends Controller
                     ]);
             }
 
-            if(!empty($data['recibido']['firma'])) {
-                // Decodificar la firma en base64
-                $imageData = $data['recibido']['firma'];
-                // Remover encabezado "data:image/png;base64,"
-                $imageData = preg_replace('#^data:image/\w+;base64,#i', '', $imageData);
-                $imageData = str_replace(' ', '+', $imageData);
-                $decoded = base64_decode($imageData);
+            // Solo procesar firma y correo si el estado es 'realizada'
+            if ($data['reporte']['estado'] == 'realizada') {
+                if (!empty($data['recibido']['firma'])) {
+                    // Decodificar la firma en base64
+                    $imageData = $data['recibido']['firma'];
+                    // Remover encabezado "data:image/png;base64,"
+                    $imageData = preg_replace('#^data:image/\w+;base64,#i', '', $imageData);
+                    $imageData = str_replace(' ', '+', $imageData);
+                    $decoded = base64_decode($imageData);
 
-                // Nombre único
-                $filename = 'Firma' . $reporte->id . '.png';
-                $folder = 'recibido';
-                $path = $folder . '/' . $filename;
+                    // Nombre único
+                    $filename = 'Firma' . $reporte->id . '.png';
+                    $folder = 'recibido';
+                    $path = $folder . '/' . $filename;
 
-                // Guardar en disco public
-                Storage::disk('public')->put($path, $decoded);
+                    // Guardar en disco public
+                    Storage::disk('public')->put($path, $decoded);
 
-                // Actualizar el registro
-                Recibido_firma::create(array_merge($data['recibido'], [
-                    'firma' => $path,
-                    'reporte_id' => $reporte->id
-                ]));
+                    // Actualizar el registro
+                    Recibido_firma::create(array_merge($data['recibido'], [
+                        'firma' => $path,
+                        'reporte_id' => $reporte->id
+                    ]));
+                } else {
+                    // Enviar correo si no hay firma
+                    // Aquí separas los correos por coma
+                    $correos = explode(',', $data['recibido']['correo']);
 
-            } else {
-                // Aquí separas los correos por coma
-                $correos = explode(',', $data['recibido']['correo']);
+                    // Limpias espacios en blanco
+                    $correos = array_map('trim', $correos);
 
-                // Limpias espacios en blanco
-                $correos = array_map('trim', $correos);
+                    // Envías a cada correo
+                    foreach ($correos as $correo) {
+                        if (!empty($correo) && filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+                            $token = Str::random(64);
 
-                // Envías a cada correo
-                foreach ($correos as $correo) {
-                    if (!empty($correo) && filter_var($correo, FILTER_VALIDATE_EMAIL)) {
-                        $token = Str::random(64);
+                            DB::table('personal_access_tokens')->insert([
+                                'tokenable_type' => Recibido_firma::class,
+                                'tokenable_id'   => $reporte->id, // registro relacionado
+                                'name'           => 'firma_recibido',
+                                'token'          => hash('sha256', $token), // se guarda hasheado
+                                'abilities'      => json_encode(['sign']),
+                                'expires_at'     => now()->addDays(7), // opcional: expira en 7 días
+                            ]);
 
-                        DB::table('personal_access_tokens')->insert([
-                            'tokenable_type' => Recibido_firma::class,
-                            'tokenable_id'   => $reporte->id, // registro relacionado
-                            'name'           => 'firma_recibido',
-                            'token'          => hash('sha256', $token), // se guarda hasheado
-                            'abilities'      => json_encode(['sign']),
-                            'expires_at'     => now()->addDays(7), // opcional: expira en 7 días
-                        ]);
+                            // Enviar por correo el enlace con el token plano
+                            $url = "/FirmarReporte?token={$token}";
 
-                        // Enviar por correo el enlace con el token plano
-                        $url = "/FirmarReporte?token={$token}";
-
-                        // Enviar correo individual
-                        Mail::to($correo)->send(new FirmarReporte($reporte, $url));
+                            // Enviar correo individual
+                            Mail::to($correo)->send(new FirmarReporte($reporte, $url));
+                        }
                     }
+
+                    $data['reporte']['estado'] = 'En Revisión';
                 }
-
-                $data['reporte']['estado'] = $data['reporte']['estado'] == 'realizada' ? 'En Revisión' : $data['reporte']['estado'];
-
             }
 
             if (!empty($data['reporte']['estado'])) {
@@ -288,47 +290,57 @@ class ReporteController extends Controller
                 $reporte->save();
             }
 
-            if(!empty($data['recibido']['firma'])) {
-                // Decodificar la firma en base64
-                $imageData = $data['recibido']['firma'];
-                // Remover encabezado "data:image/png;base64,"
-                $imageData = preg_replace('#^data:image/\w+;base64,#i', '', $imageData);
-                $imageData = str_replace(' ', '+', $imageData);
-                $decoded = base64_decode($imageData);
+            // Solo procesar firma y correo si el estado es 'realizada'
+            if ($data['reporte']['estado'] == 'realizada') {
+                if (!empty($data['recibido']['firma'])) {
+                    // Decodificar la firma en base64
+                    $imageData = $data['recibido']['firma'];
+                    // Remover encabezado "data:image/png;base64,"
+                    $imageData = preg_replace('#^data:image/\w+;base64,#i', '', $imageData);
+                    $imageData = str_replace(' ', '+', $imageData);
+                    $decoded = base64_decode($imageData);
 
-                // Nombre único
-                $filename = 'Firma' . $reporte->id . '.png';
-                $folder = 'recibido';
-                $path = $folder . '/' . $filename;
+                    // Nombre único
+                    $filename = 'Firma' . $reporte->id . '.png';
+                    $folder = 'recibido';
+                    $path = $folder . '/' . $filename;
 
-                // Guardar en disco public
-                Storage::disk('public')->put($path, $decoded);
+                    // Guardar en disco public
+                    Storage::disk('public')->put($path, $decoded);
 
-                // Actualizar el registro
-                $recibido = Recibido_firma::where('reporte_id', $reporte->id)->first();
-                Recibido_firma::update(array_merge($data['recibido'], [
-                    'firma' => $path,
-                ]));
+                    // Actualizar el registro
+                    $recibido = Recibido_firma::where('reporte_id', $reporte->id)->first();
+                    if($recibido){
+                        $recibido->update(array_merge($data['recibido'], [
+                            'firma' => $path,
+                        ]));
+                    } else {
+                        Recibido_firma::create(array_merge($data['recibido'], [
+                            'firma' => $path,
+                            'reporte_id' => $reporte->id
+                        ]));
+                    }
+                } else {
+                    // Enviar correo si no hay firma
+                    $token = Str::random(64);
 
-            } else {
-                $token = Str::random(64);
+                    DB::table('personal_access_tokens')->insert([
+                        'tokenable_type' => Recibido_firma::class,
+                        'tokenable_id'   => $reporte->id, // registro relacionado
+                        'name'           => 'firma_recibido',
+                        'token'          => hash('sha256', $token), // se guarda hasheado
+                        'abilities'      => json_encode(['sign']),
+                        'expires_at'     => now()->addDays(7), // opcional: expira en 7 días
+                    ]);
 
-                DB::table('personal_access_tokens')->insert([
-                    'tokenable_type' => Recibido_firma::class,
-                    'tokenable_id'   => $reporte->id, // registro relacionado
-                    'name'           => 'firma_recibido',
-                    'token'          => hash('sha256', $token), // se guarda hasheado
-                    'abilities'      => json_encode(['sign']),
-                    'expires_at'     => now()->addDays(7), // opcional: expira en 7 días
-                ]);
+                    // Enviar por correo el enlace con el token plano
+                    $url = "/FirmarReporte?token={$token}";
 
-                // Enviar por correo el enlace con el token plano
-                $url = "/FirmarReporte?token={$token}";
+                    Mail::to($data['recibido']['correo'])->send(new FirmarReporte($reporte, $url));
 
-                Mail::to($data['recibido']['correo'])->send(new FirmarReporte($reporte, $url));
-
-                $reporte->estado = 'En Revisión';
-                $reporte->save();
+                    $reporte->estado = 'En Revisión';
+                    $reporte->save();
+                }
             }
 
             DB::commit();
