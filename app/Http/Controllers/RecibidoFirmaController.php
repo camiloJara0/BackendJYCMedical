@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Recibido_firma;
 use App\Models\Reporte;
+use App\Models\Historial_estados_reporte;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -77,10 +78,24 @@ class RecibidoFirmaController extends Controller
                     'reporte_id' => $data['recibido']['reporte_id']
                 ]));
 
+
                 $reporte = Reporte::where('id', $data['recibido']['reporte_id'])->first();
                 $reporte->estado = 'realizada';
                 $reporte->save();
 
+            }
+
+            if (!empty($data['reporte']['estado'])) {
+                $reporte = Reporte::where('id', $data['recibido']['reporte_id'])->first();
+                $reporte->estado = $data['reporte']['estado'];
+                $reporte->save();
+
+                Historial_estados_reporte::create([
+                    'reporte_id' => $reporte->id,
+                    'tecnico_id' => $reporte->tecnico_id ?? null,
+                    'nombre_estado' => $data['reporte']['estado'],
+                    'observaciones' => $data['estado']['observacion']
+                ]);
             }
 
             DB::commit();

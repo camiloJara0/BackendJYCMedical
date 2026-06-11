@@ -16,27 +16,7 @@ class CitaController extends Controller
      */
     public function index()
     {
-        $citas = DB::table('citas')
-        ->join('equipos', 'citas.equipo_id', '=', 'equipos.id')
-        ->join('tecnicos', 'citas.tecnico_id', '=', 'tecnicos.id')
-        ->join('clientes', 'citas.cliente_id', '=', 'clientes.id')
-        ->select(
-            'citas.*',
-            'equipos.nombre as nombre_equipo',
-            'tecnicos.nombre as nombre_tecnico',
-            'clientes.nombre as nombre_cliente',
-        DB::raw('(SELECT nombre_estado 
-                  FROM historial_estados_citas 
-                  WHERE historial_estados_citas.cita_id = citas.id 
-                  ORDER BY historial_estados_citas.created_at DESC 
-                  LIMIT 1) as ultimo_estado'),
-        DB::raw('(SELECT observaciones 
-                  FROM historial_estados_citas 
-                  WHERE historial_estados_citas.cita_id = citas.id 
-                  ORDER BY historial_estados_citas.created_at DESC 
-                  LIMIT 1) as ultima_observacion')
-
-        )
+        $citas = Cita::with(['tecnico', 'cliente', 'equipo', 'ultimo_estado', 'equipos'])
         ->orderBy('fecha', 'desc')
         ->get();
 
@@ -61,9 +41,29 @@ class CitaController extends Controller
      */
     public function store(Request $request)
     {
-        return Cita::create([
-                    'estado' => 'inactiva',
-                ] + $request->all());
+        $equipoIds = $request->equipo_id ?? [];
+        
+        $cita = Cita::create([
+            'estado' => 'inactiva',
+            'tecnico_id' => $request->tecnico_id,
+            'cliente_id' => $request->cliente_id,
+            'tipo' => $request->tipo,
+            'fecha' => $request->fecha,
+            'hora' => $request->hora,
+            'equipo_id' => count($equipoIds) === 1 ? $equipoIds[0] : null,
+        ]);
+
+        // Si equipo_id es un array, crear registros en la tabla pivote
+        if (count($equipoIds) > 1) {
+            foreach ($equipoIds as $equipoId) {
+                $cita->equipos()->attach($equipoId, [
+                    'estado' => 'pendiente',
+                    'observacion' => null,
+                ]);
+            }
+        }
+
+        return $cita;
     }
 
     /**
@@ -104,7 +104,17 @@ class CitaController extends Controller
             'nombre_estado' => 'editada',
             'observaciones' => $request->motivo_edicion,
         ]);
-        $cita->update($request->all());
+
+        $equipoIds = $request->equipo_id ?? [];
+        $cita->update(array_merge(
+                    $request->all(),
+                    ['equipo_id' => count($equipoIds) === 1 ? $equipoIds[0] : null]
+                ));
+
+        if(count($equipoIds) > 1) {
+            $cita->equipos()->sync($equipoIds);
+        }
+
         return $cita;
     }
 

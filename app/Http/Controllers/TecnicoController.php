@@ -21,8 +21,7 @@ class TecnicoController extends Controller
      */
     public function index()
     {
-        return Tecnico::where('tecnicos.estado', 'activo')
-        ->join('users', 'tecnicos.user_id', '=', 'users.id')
+        return Tecnico::join('users', 'tecnicos.user_id', '=', 'users.id')
         ->select('tecnicos.*', 'users.correo as correo')
         ->get();
 

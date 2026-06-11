@@ -14,6 +14,7 @@ use App\Models\Recibido_firma;
 use App\Models\Cita;
 use App\Models\Historial_estados_cita;
 use App\Models\Historial_estados_reporte;
+use App\Models\Cita_equipo;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Str;
@@ -63,14 +64,24 @@ class ReporteController extends Controller
             $ids = [];
 
 
+            $cita = Cita::where('id', $data['cita']['id'])->first();
+            if($cita->estado == 'realizada'){
+                return response()->json([
+                    'success' => true, 
+                    'message' => 'Cita ya realizada, espera que se recargue los estados',
+                ], 500);
+            }
+
             $reporte = Reporte::create($data['reporte']);
             $ids['Reporte'] = $reporte;
 
+
             $actividad = Actividad::create([
-                'descripcion' => $data['actividades'],
+                'descripcion' => $data['actividades'] ?? 'PENDIENTE',
                 'reporte_id'  => $reporte->id
             ]);
             $ids['Actividad'] = $actividad->id;
+
 
             $ids['Materiales'] = [];
             foreach ($data['materiales'] ?? [] as $material) {
@@ -104,16 +115,32 @@ class ReporteController extends Controller
 
             // Actualizar estado de la Cita
             if (!empty($data['cita'])) {
-                Historial_estados_cita::create([
-                    'cita_id' => $data['cita']['id'],
-                    'tecnico_id' => $reporte->tecnico_id ?? null,
-                    'nombre_estado' => 'realizada',
-                    'observaciones' => 'Reporte generado con ID: ' . $reporte->id
-                ]);
-                Cita::where('id', $data['cita']['id'] ?? null)
-                    ->update([
-                        'estado' => 'realizada',
+                if($cita->equipo_id !== null){
+                    Historial_estados_cita::create([
+                        'cita_id' => $data['cita']['id'],
+                        'tecnico_id' => $reporte->tecnico_id ?? null,
+                        'nombre_estado' => 'realizada',
+                        'observaciones' => 'Reporte generado con ID: ' . $reporte->id
                     ]);
+                    $cita->update([
+                            'estado' => 'realizada',
+                        ]);
+                } else {
+                    $cita_equipo = Cita_equipo::where('equipo_id', $data['equipo']['id'])
+                        ->where('cita_id', $cita->id)
+                        ->update([
+                            'estado' => 'realizada',
+                            'observacion' => 'Reporte generado con ID: ' . $reporte->id
+                        ]);
+
+                    // validacion si todos los equipos de la cita están realizados, entonces actualizar la cita a realizada
+                    $totalEquipos = Cita_equipo::where('cita_id', $cita->id)->count();
+                    $equiposRealizados = Cita_equipo::where('cita_id', $cita->id)->where('estado', 'realizada')->count();
+
+                    if ($totalEquipos === $equiposRealizados) {
+                        $cita->update(['estado' => 'realizada']);
+                    }
+                }
             }
 
             // Solo procesar firma y correo si el estado es 'realizada'
@@ -277,6 +304,16 @@ class ReporteController extends Controller
                 $ids['Repuestos'][] = $nuevo->id;
             }
 
+            foreach ($data['componentes'] ?? [] as $componente) {
+                Estado_componente::where('reporte_id', $reporte->id)
+                    ->where('componente_id', $componente['componente_id'])
+                    ->updateOrCreate([
+                        'reporte_id' => $reporte->id,
+                        'componente_id' => $componente['componente_id']
+                    ], [
+                        ...$componente,
+                    ]);
+            }
 
             if (!empty($data['reporte']['estado'])) {
                 

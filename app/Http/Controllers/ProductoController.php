@@ -16,7 +16,7 @@ class ProductoController extends Controller
      */
     public function index()
     {
-        $productos = Producto::where('estado', 'activo')->get()->map(function ($producto) {
+        $productos = Producto::get()->map(function ($producto) {
             $producto->imagen = asset('storage/' . $producto->imagen);
             return $producto;
         });
