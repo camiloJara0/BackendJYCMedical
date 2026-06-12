@@ -58,7 +58,11 @@ class TipoEquipoController extends Controller
      */
     public function show(Tipo_equipo $tipo_equipo)
     {
-        return $tipo_equipo->load('sistemas.componentes');
+        return $tipo_equipo->load([
+            'sistemas.componentes' => function ($query) {
+                $query->where('estado', 'activo');
+            }
+        ]);
     }
 
     /**
