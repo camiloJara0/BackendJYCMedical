@@ -304,15 +304,26 @@ class ReporteController extends Controller
                 $ids['Repuestos'][] = $nuevo->id;
             }
 
-            foreach ($data['componentes'] ?? [] as $componente) {
-                Estado_componente::where('reporte_id', $reporte->id)
-                    ->where('componente_id', $componente['componente_id'])
-                    ->updateOrCreate([
+
+            $componentes = $data['componentes'] ?? [];
+            // IDs que vienen en la request
+            $idsComponentes = collect($componentes)->pluck('componente_id')->toArray();
+            // Eliminar los que ya no vienen
+            Estado_componente::where('reporte_id', $reporte->id)
+                ->whereNotIn('componente_id', $idsComponentes)
+                ->delete();
+
+            // Crear o actualizar
+            foreach ($componentes as $componente) {
+                Estado_componente::updateOrCreate(
+                    [
                         'reporte_id' => $reporte->id,
                         'componente_id' => $componente['componente_id']
-                    ], [
-                        ...$componente,
-                    ]);
+                    ],
+                    [
+                        ...$componente
+                    ]
+                );
             }
 
             if (!empty($data['reporte']['estado'])) {
