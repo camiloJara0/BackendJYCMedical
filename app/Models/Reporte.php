@@ -80,4 +80,9 @@ class Reporte extends Model
         return $this->hasMany(Historial_estados_reporte::class);
     }
 
+    public function resultadoReporte()
+    {
+        return $this->hasOne(Resultado_reporte::class);
+    }
+
 }

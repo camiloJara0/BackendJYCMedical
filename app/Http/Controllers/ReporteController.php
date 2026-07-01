@@ -15,6 +15,7 @@ use App\Models\Cita;
 use App\Models\Historial_estados_cita;
 use App\Models\Historial_estados_reporte;
 use App\Models\Cita_equipo;
+use App\Models\Resultado_reporte;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Str;
@@ -34,7 +35,7 @@ class ReporteController extends Controller
      */
     public function index()
     {
-        return Reporte::with('actividades', 'materiales', 'mediciones', 'repuestos', 'accesorios', 'estado_componente.componente', 'tecnico', 'cliente', 'equipo', 'firmaRecibido', 'historialEstadosReporte')->
+        return Reporte::with('actividades', 'materiales', 'mediciones', 'repuestos', 'accesorios', 'estado_componente.componente', 'tecnico', 'cliente', 'equipo', 'firmaRecibido', 'historialEstadosReporte', 'resultadoReporte')->
         orderBy('fecha', 'desc')->orderBy('id', 'desc')
         ->get();
     }
@@ -145,6 +146,13 @@ class ReporteController extends Controller
 
             // Solo procesar firma y correo si el estado es 'realizada'
             if ($data['reporte']['estado'] == 'realizada') {
+
+                Resultado_reporte::create([
+                    'reporte_id' => $reporte->id,
+                    'estado' => $data['resultado']['estado'] ?? null,
+                    'observacion' => $data['resultado']['observacion'] ?? null
+                ]);
+
                 if (!empty($data['recibido']['firma'])) {
                     // Decodificar la firma en base64
                     $imageData = $data['recibido']['firma'];
@@ -340,6 +348,13 @@ class ReporteController extends Controller
 
             // Solo procesar firma y correo si el estado es 'realizada'
             if ($data['reporte']['estado'] == 'realizada') {
+
+                Resultado_reporte::create([
+                    'reporte_id' => $reporte->id,
+                    'estado' => $data['resultado']['estado'] ?? null,
+                    'observacion' => $data['resultado']['observacion'] ?? null
+                ]);
+
                 if (!empty($data['recibido']['firma'])) {
                     // Decodificar la firma en base64
                     $imageData = $data['recibido']['firma'];
