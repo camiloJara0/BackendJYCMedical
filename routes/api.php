@@ -24,10 +24,16 @@ use App\Http\Controllers\TipoEquipoController;
 use App\Http\Controllers\RolController;
 use App\Http\Controllers\SeccionController;
 use App\Http\Controllers\RecibidoFirmaController;
+use App\Http\Controllers\SolicitudCitaController;
 
 Route::get('/getproductos', [ProductoController::class, 'index']);
 Route::get('/getcategorias', [CategoriaController::class, 'index']);
 Route::post('/solicitar_cotizacion', [SolicitudesCotizacionController::class, 'store']);
+
+// Solicitudes de cita - público
+Route::post('/solicitud_cita', [SolicitudCitaController::class, 'store']);
+Route::get('/validar_cliente_nit/{nit}', [SolicitudCitaController::class, 'validarClienteNIT']);
+Route::get('/validar_equipo_serial/{serial}', [SolicitudCitaController::class, 'validarEquipoSerial']);
 Route::post('/login', [UserController::class, 'login']);
 Route::post('/recuperarContraseña', [UserController::class, 'verificacion']);
 Route::post('/cambiarContraseña', [UserController::class, 'verificarCodigo']);
@@ -62,4 +68,5 @@ Route::middleware(['auth:sanctum', 'check.token.expiration'])->group(function ()
     Route::apiResource('/tipo_equipo', TipoEquipoController::class);
     Route::apiResource('/rol', RolController::class);
     Route::apiResource('/secciones', SeccionController::class);
+    Route::apiResource('/solicitud_cita', SolicitudCitaController::class)->except(['store']);
 });
