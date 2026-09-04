@@ -62,58 +62,58 @@ class SolicitudesCotizacionController extends Controller
 
 
         // Validación de datos
-            // $request->validate([
-            //     'nombre' => 'required|string|max:255',
-            //     'correo' => 'nullable|string|email',
-            //     'descripcion' => 'nullable|string',
-            //     'NIT' => 'nullable|integer|min:0',
-            //     'telefono' => 'nullable|numeric|min:1000000000',
-            //     'imagenes_referencia' => 'nullable|file|mimes:png,jpg,jpeg,webp|max:5120', // max 5MB
-            //     'productos' => 'required|array',
-            //     'productos.*.id' => 'required|integer',
-            // ]);
+        $request->validate([
+            'nombre' => 'required|string|max:255',
+            'correo' => 'nullable|string|email',
+            'descripcion' => 'nullable|string',
+            'NIT' => 'nullable|integer|min:0',
+            'telefono' => 'nullable|numeric|min:1000000000',
+            'imagenes_referencia' => 'nullable|file|mimes:png,jpg,jpeg,webp|max:5120', // max 5MB
+            'productos' => 'required|array',
+            'productos.*.id' => 'required|integer',
+        ]);
 
-            // // Guardar solicitud
-            // $solicitud = solicitudes_cotizacion::create([
-            //     'nombre' => $request->nombre,
-            //     'correo' => $request->correo,
-            //     'descripcion' => $request->descripcion,
-            //     'NIT' => $request->NIT,
-            //     'telefono' => $request->telefono,
-            //     'estado' => 'pendiente',
-            // ]);
+        // Guardar solicitud
+        $solicitud = solicitudes_cotizacion::create([
+            'nombre' => $request->nombre,
+            'correo' => $request->correo,
+            'descripcion' => $request->descripcion,
+            'NIT' => $request->NIT,
+            'telefono' => $request->telefono,
+            'estado' => 'pendiente',
+        ]);
 
-            // // Guardar detalles de productos
-            // foreach ($request->productos as $producto) {
-            //     cotizacion_detalle::create([
-            //         'solicitud_id' => $solicitud->id,
-            //         'producto_id' => $producto['id'],
-            //         'cantidad' => $producto['cantidad'] ?? 1,
-            //         'comentarios' => $producto['comentarios'] ?? null
-            //     ]);
-            // }
+        // Guardar detalles de productos
+        foreach ($request->productos as $producto) {
+            cotizacion_detalle::create([
+                'solicitud_id' => $solicitud->id,
+                'producto_id' => $producto['id'],
+                'cantidad' => $producto['cantidad'] ?? 1,
+                'comentarios' => $producto['comentarios'] ?? null
+            ]);
+        }
 
-            // // Manejo de imagen de referencia
-            // $imagenFile = $request->file('imagenes_referencia');
+        // Manejo de imagen de referencia
+        $imagenFile = $request->file('imagenes_referencia');
 
 
-            // // Enviar correo con adjunto
-            // try {
-            //     Mail::to('camilojara0000@gmail.com')->send(new CotizacionRecibida($solicitud, $imagenFile));
-            // } catch (\Exception $e) {
-            //     Log::error('Error enviando correo: '.$e->getMessage());
-
-            //     return response()->json([
-            //         'success' => false,
-            //         'error' => 'No se pudo enviar el correo',
-            //         'details' => $e->getMessage()
-            //     ], 500);
-            // }
+        // Enviar correo con adjunto
+        try {
+            Mail::to('jcmedicalinfo@gmail.com')->send(new CotizacionRecibida($solicitud, $imagenFile));
+        } catch (\Exception $e) {
+            Log::error('Error enviando correo: '.$e->getMessage());
 
             return response()->json([
-                'success' => true,
-                'data' => $request
-            ]);
+                'success' => false,
+                'error' => 'No se pudo enviar el correo',
+                'details' => $e->getMessage()
+            ], 500);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $solicitud
+        ]);
     }
 
     /**
