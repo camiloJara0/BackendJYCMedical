@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Log;
 use App\Mail\CotizacionRecibida;
 use App\Mail\CotizacionRespuesta;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 
 class SolicitudesCotizacionController extends Controller
 {
