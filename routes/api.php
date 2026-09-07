@@ -69,4 +69,5 @@ Route::middleware(['auth:sanctum', 'check.token.expiration'])->group(function ()
     Route::apiResource('/rol', RolController::class);
     Route::apiResource('/secciones', SeccionController::class);
     Route::apiResource('/solicitud_cita', SolicitudCitaController::class)->except(['store']);
+    Route::post('/solicitud_cita/convertir', [SolicitudCitaController::class, 'convertirEnCita']);
 });

@@ -5,10 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\SolicitudCita;
 use App\Models\Cliente;
 use App\Models\Equipo;
+use App\Models\Cita;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Http;
 use App\Mail\SolicitudCitaRecibida;
+use App\Mail\SolicitudCitaAtendida;
+use App\Mail\SolicitudCitaConvertidaCita;
 
 class SolicitudCitaController extends Controller
 {
@@ -117,12 +120,14 @@ class SolicitudCitaController extends Controller
         ]);
 
         $datos = $request->only(['estado', 'respuesta_admin']);
+        $archivoPath = null;
 
         if ($request->hasFile('archivo_respuesta')) {
             $archivo = $request->file('archivo_respuesta');
             $nombreArchivo = time() . '_' . $archivo->getClientOriginalName();
             $archivo->move(public_path('storage/solicitudes_citas'), $nombreArchivo);
             $datos['archivo_respuesta'] = $nombreArchivo;
+            $archivoPath = public_path('storage/solicitudes_citas/' . $nombreArchivo);
         }
 
         if ($request->estado) {
@@ -131,9 +136,102 @@ class SolicitudCitaController extends Controller
 
         $solicitud->update($datos);
 
+        if ($request->estado === 'atendida' && $solicitud->correo) {
+            try {
+                Mail::to($solicitud->correo)->send(
+                    new SolicitudCitaAtendida($solicitud, $request->respuesta_admin, $archivoPath)
+                );
+            } catch (\Exception $e) {
+                // No falla si el correo no se envia
+            }
+        }
+
         return response()->json([
             'success' => true,
             'data' => $solicitud
+        ]);
+    }
+
+    public function convertirEnCita(Request $request)
+    {
+        $request->validate([
+            'solicitud_id' => 'required|exists:solicitudes_citas,id',
+            'tecnico_id' => 'required|exists:tecnicos,id',
+            'fecha' => 'required|date',
+            'hora' => 'required|string',
+        ]);
+
+        $solicitud = SolicitudCita::findOrFail($request->solicitud_id);
+
+        $cliente_id = $solicitud->cliente_id;
+        if (!$cliente_id && $solicitud->NIT) {
+            $cliente = Cliente::where('NIT', $solicitud->NIT)->first();
+            if (!$cliente) {
+                $cliente = Cliente::create([
+                    'nombre' => $solicitud->nombre_contacto,
+                    'correo' => $solicitud->correo,
+                    'telefono' => $solicitud->telefono,
+                    'NIT' => $solicitud->NIT,
+                    'razon_social' => $solicitud->razon_social,
+                    'estado' => 'activo',
+                ]);
+            }
+            $cliente_id = $cliente->id;
+        }
+
+        $equipo_id = null;
+        if ($solicitud->serial_equipo) {
+            $equipo = Equipo::where('serie', $solicitud->serial_equipo)->first();
+            if (!$equipo) {
+                $equipo = Equipo::create([
+                    'cliente_id' => $cliente_id,
+                    'tipo_equipo_id' => 1,
+                    'nombre' => $solicitud->tipo_equipo_descripcion ?: trim($solicitud->marca . ' ' . $solicitud->modelo),
+                    'marca' => $solicitud->marca,
+                    'modelo' => $solicitud->modelo,
+                    'serie' => $solicitud->serial_equipo,
+                    'estado' => 'activo',
+                ]);
+            }
+            $equipo_id = $equipo->id;
+        }
+
+        $cita = Cita::create([
+            'estado' => 'inactiva',
+            'tecnico_id' => $request->tecnico_id,
+            'cliente_id' => $cliente_id,
+            'tipo' => $solicitud->tipo_cita,
+            'fecha' => $request->fecha,
+            'hora' => $request->hora,
+            'equipo_id' => $equipo_id,
+        ]);
+
+        $solicitud->update([
+            'estado' => 'convertida_cita',
+            'respuesta_admin' => 'Convertida en cita el ' . now()->locale('es')->isoFormat('D [de] MMMM [de] YYYY'),
+            'fecha_respuesta' => now(),
+            'cliente_id' => $cliente_id,
+            'equipo_id' => $equipo_id,
+        ]);
+
+        $cita->load(['tecnico', 'cliente', 'equipo']);
+
+        if ($solicitud->correo) {
+            try {
+                Mail::to($solicitud->correo)->send(
+                    new SolicitudCitaConvertidaCita($solicitud, $cita)
+                );
+            } catch (\Exception $e) {
+                // No falla si el correo no se envia
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'cita' => $cita,
+                'solicitud' => $solicitud,
+            ]
         ]);
     }
 
