@@ -29,11 +29,10 @@ class SolicitudCitaController extends Controller
         // Validar Turnstile
         $turnstileToken = $request->input('turnstile_token');
         if ($turnstileToken) {
-            $secretKey = '0x4AAAAAAAFpSsnN-kX4Y0N'; // Secret key de Cloudflare Turnstile
             $response = Http::asForm()->post('https://challenges.cloudflare.com/turnstile/v0/siteverify', [
-                'secret' => $secretKey,
+                'secret' => env('TURNSTILE_SECRET_KEY'),
                 'response' => $turnstileToken,
-                'remoteip' => $request->ip(),
+                // 'remoteip' => $request->ip(),
             ]);
             $result = $response->json();
             if (!$result['success']) {
@@ -93,7 +92,7 @@ class SolicitudCitaController extends Controller
 
         // Enviar correo al administrador
         try {
-            Mail::to('camilojara0000@gmail.com')->send(new SolicitudCitaRecibida($solicitud));
+            Mail::to('jcmedicalinfo@gmail.com')->send(new SolicitudCitaRecibida($solicitud));
         } catch (\Exception $e) {
             // No falla la petición si el correo no se envía
         }
