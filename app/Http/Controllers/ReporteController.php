@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Reporte;
+use App\Models\ReporteImagen;
 use App\Models\Actividad;
 use App\Models\Material;
 use App\Models\Medicion;
@@ -25,9 +26,30 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\FirmarReporte;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class ReporteController extends Controller
 {
+    /** Formatos de imagen permitidos (mime real verificado con getimagesizefromstring). */
+    private const IMAGEN_MIMES = ['image/jpeg', 'image/png', 'image/webp'];
+
+    /** Tamaño máximo por imagen en bytes (5 MB). */
+    private const IMAGEN_MAX_BYTES = 5242880;
+
+    /** Cantidad máxima de imágenes por reporte. */
+    private const IMAGEN_MAX_CANTIDAD = 20;
+
+    /** Lado máximo tras la optimización (px). */
+    private const IMAGEN_MAX_PX = 1600;
+
+    /** Calidad JPEG de recompresión. */
+    private const IMAGEN_CALIDAD = 80;
+
+    /** Extensiones permitidas para la validación de data URIs. */
+    private const IMAGEN_EXTENSIONES = ['jpeg', 'jpg', 'png', 'webp'];
+
+    /** Tamaños de visualización válidos en el PDF. */
+    private const TAMANOS_PDF = ['100', '50', '30'];
     /**
      * Display a listing of the resource.
      *
@@ -35,7 +57,7 @@ class ReporteController extends Controller
      */
     public function index()
     {
-        return Reporte::with('actividades', 'materiales', 'mediciones', 'repuestos', 'accesorios', 'estado_componente.componente', 'tecnico', 'cliente', 'equipo', 'firmaRecibido', 'historialEstadosReporte', 'resultadoReporte')->
+        return Reporte::with('actividades', 'materiales', 'mediciones', 'repuestos', 'accesorios', 'estado_componente.componente', 'tecnico', 'cliente', 'equipo', 'firmaRecibido', 'historialEstadosReporte', 'resultadoReporte', 'images')->
         orderBy('fecha', 'desc')->orderBy('id', 'desc')
         ->get();
     }
@@ -73,7 +95,7 @@ class ReporteController extends Controller
                 ], 500);
             }
 
-            $reporte = Reporte::create($data['reporte']);
+            $reporte = Reporte::create($this->datosReporte($data));
             $ids['Reporte'] = $reporte;
 
 
@@ -220,6 +242,8 @@ class ReporteController extends Controller
                 ]);
             }
 
+            $this->syncimagenes($reporte, $request);
+
             DB::commit();
 
             return response()->json([
@@ -227,6 +251,13 @@ class ReporteController extends Controller
                 'ids' => $ids,
             ], 201);
 
+        } catch (ValidationException $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => collect($e->errors())->flatten()->first(),
+                'errors' => $e->errors(),
+            ], 422);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['error' => 'Error al guardar Reporte', 'message' => $e->getMessage()], 500);
@@ -275,6 +306,16 @@ class ReporteController extends Controller
                 'descripcion' => $data['actividades'],
             ]);
             $ids['Actividad'] = $actividad->id;
+
+            if (array_key_exists('recomendaciones', $data) && is_array($data['recomendaciones'])) {
+                $rec = $data['recomendaciones'];
+                $reporte->fill([
+                    'recomendaciones_cliente' => $rec['cliente'] ?? null,
+                    'riesgos_identificados' => $rec['riesgos'] ?? null,
+                    'proximas_acciones' => $rec['proximas'] ?? null,
+                ]);
+                $reporte->save();
+            }
 
             $ids['Materiales'] = [];
             foreach ($data['materiales'] ?? [] as $material) {
@@ -406,6 +447,8 @@ class ReporteController extends Controller
                 }
             }
 
+            $this->syncimagenes($reporte, $request);
+
             DB::commit();
 
             return response()->json([
@@ -413,6 +456,13 @@ class ReporteController extends Controller
                 'ids' => $ids,
             ], 201);
 
+        } catch (ValidationException $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => collect($e->errors())->flatten()->first(),
+                'errors' => $e->errors(),
+            ], 422);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['error' => 'Error al guardar Reporte', 'message' => $e->getMessage()], 500);
@@ -436,7 +486,7 @@ class ReporteController extends Controller
     public function imprimir($id)
     {
         try {
-            $reporte = Reporte::with('actividades', 'materiales', 'mediciones', 'repuestos', 'accesorios', 'estado_componente.componente.sistema', 'tecnico', 'cliente', 'equipo', 'firmaRecibido')->findOrFail($id);
+            $reporte = Reporte::with('actividades', 'materiales', 'mediciones', 'repuestos', 'accesorios', 'estado_componente.componente.sistema', 'tecnico', 'cliente', 'equipo', 'firmaRecibido', 'images')->findOrFail($id);
 
             $totalPages = 1;
             $fileName = 'reporte_' . $reporte->id . '_' . $reporte->equipo->nombre . '.pdf';
@@ -482,7 +532,7 @@ class ReporteController extends Controller
 
 
 
-        $reporte = Reporte::with('actividades', 'materiales', 'mediciones', 'repuestos', 'accesorios', 'estado_componente.componente.sistema', 'tecnico', 'cliente', 'equipo', 'firmaRecibido')->findOrFail($request->id);
+        $reporte = Reporte::with('actividades', 'materiales', 'mediciones', 'repuestos', 'accesorios', 'estado_componente.componente.sistema', 'tecnico', 'cliente', 'equipo', 'firmaRecibido', 'images')->findOrFail($request->id);
         $totalPages = 1;
         $fileName = 'reporte_' . $reporte->id . '_' . $reporte->equipo->nombre . '.pdf';
 
@@ -499,5 +549,312 @@ class ReporteController extends Controller
             ->header('Access-Control-Allow-Origin', '*')
             ->header('Access-Control-Expose-Headers', 'Content-Disposition')
             ->header('Content-Disposition', 'attachment; filename="' . $fileName . '"');
+    }
+
+    /**
+     * Combina los datos del reporte con las recomendaciones del formulario.
+     */
+    private function datosReporte(array $data): array
+    {
+        $reporte = $data['reporte'] ?? [];
+        $rec = $data['recomendaciones'] ?? [];
+
+        return array_merge($reporte, [
+            'recomendaciones_cliente' => $rec['cliente'] ?? ($reporte['recomendaciones_cliente'] ?? null),
+            'riesgos_identificados' => $rec['riesgos'] ?? ($reporte['riesgos_identificados'] ?? null),
+            'proximas_acciones' => $rec['proximas'] ?? ($reporte['proximas_acciones'] ?? null),
+        ]);
+    }
+
+    /**
+     * Sincroniza las imágenes del reporte: conserva las existentes (actualizando
+     * descripción, tamaño y posición), crea las nuevas desde base64 y elimina
+     * las filas y archivos físicos que ya no se usan.
+     *
+     * @throws ValidationException si alguna imagen no cumple formato, tamaño o cantidad.
+     */
+    private function syncimagenes(Reporte $reporte, Request $request): void
+    {
+        // Sin campo imágenes en el payload: no tocar el conjunto actual.
+        if (!$request->has('images')) {
+            return;
+        }
+
+        $items = $this->normalizarImagenes((array) $request->input('images', []));
+
+        // Compatibilidad con el contrato anterior (URLs planas de imágenes existentes).
+        foreach ((array) $request->input('existing_image_urls', []) as $url) {
+            if (!empty($url) && is_string($url)) {
+                $items[] = ['url' => $url];
+            }
+        }
+
+        $this->validarImagenes($items);
+
+        $existentes = $reporte->images()->get()->keyBy('id');
+        $existentesPorUrl = $existentes->keyBy('url');
+        $conservadas = [];
+        $position = 0;
+
+        foreach ($items as $item) {
+            $descripcion = isset($item['descripcion']) ? trim((string) $item['descripcion']) : null;
+            $tamano = $this->normalizarTamano($item['tamano'] ?? null);
+            $creada = null;
+
+            if (!empty($item['id']) && $existentes->has($item['id'])) {
+                $creada = $existentes[$item['id']];
+                $creada->fill([
+                    'position' => $position,
+                    'descripcion' => $descripcion,
+                    'tamaño' => $tamano,
+                ])->save();
+            } elseif (!empty($item['base64'])) {
+                $procesada = $this->procesarImagenBase64($item['base64']);
+                $ruta = 'reporte/images/' . Str::uuid() . '.' . $procesada['extension'];
+                Storage::disk('public')->put($ruta, $procesada['bytes']);
+
+                $creada = $reporte->images()->create([
+                    'url' => asset('storage/' . $ruta),
+                    'position' => $position,
+                    'descripcion' => $descripcion,
+                    'tamaño' => $tamano,
+                ]);
+            } elseif (!empty($item['url'])) {
+                $creada = $existentesPorUrl[$item['url']] ?? null;
+
+                if ($creada) {
+                    $creada->fill([
+                        'position' => $position,
+                        'descripcion' => $descripcion,
+                        'tamaño' => $tamano,
+                    ])->save();
+                } else {
+                    $creada = $reporte->images()->create([
+                        'url' => $item['url'],
+                        'position' => $position,
+                        'descripcion' => $descripcion,
+                        'tamaño' => $tamano,
+                    ]);
+                }
+            } else {
+                continue;
+            }
+
+            $conservadas[] = $creada->id;
+            $position++;
+        }
+
+        $aEliminar = $reporte->images()->whereNotIn('id', $conservadas)->get();
+
+        foreach ($aEliminar as $imagen) {
+            $this->eliminarArchivoImagen($imagen);
+            $imagen->delete();
+        }
+    }
+
+    /**
+     * Normaliza el payload de imágenes: acepta objetos estructurados
+     * { id?, url?, base64?, descripcion?, tamano? } y strings planos
+     * (data URI o URL) heredados del contrato anterior.
+     */
+    private function normalizarImagenes(array $items): array
+    {
+        $normalizadas = [];
+
+        foreach ($items as $item) {
+            if (is_string($item) && !empty($item)) {
+                $normalizadas[] = str_starts_with($item, 'data:image')
+                    ? ['base64' => $item]
+                    : ['url' => $item];
+            } elseif (is_array($item)) {
+                $normalizadas[] = [
+                    'id' => $item['id'] ?? null,
+                    'url' => $item['url'] ?? null,
+                    'base64' => $item['base64'] ?? null,
+                    'descripcion' => $item['descripcion'] ?? null,
+                    'tamano' => $item['tamano'] ?? ($item['tamaño'] ?? null),
+                ];
+            }
+        }
+
+        return $normalizadas;
+    }
+
+    /**
+     * Valida cantidad, formato real (sniffing MIME) y tamaño de cada imagen nueva.
+     *
+     * @throws ValidationException
+     */
+    private function validarImagenes(array $items): void
+    {
+        if (count($items) > self::IMAGEN_MAX_CANTIDAD) {
+            throw ValidationException::withMessages([
+                'images' => 'Máximo ' . self::IMAGEN_MAX_CANTIDAD . ' imágenes por reporte.',
+            ]);
+        }
+
+        foreach ($items as $index => $item) {
+            $etiqueta = 'La imagen ' . ($index + 1);
+
+            if (empty($item['base64'])) {
+                continue; // Las URLs existentes no se revalidan.
+            }
+
+            if (!preg_match('#^data:image/(' . implode('|', self::IMAGEN_EXTENSIONES) . ');base64,#i', $item['base64'])) {
+                throw ValidationException::withMessages([
+                    'images' => $etiqueta . ' debe estar en formato JPG, PNG o WEBP.',
+                ]);
+            }
+
+            $bytes = base64_decode(substr($item['base64'], strpos($item['base64'], ',') + 1), true);
+
+            if ($bytes === false || $bytes === '') {
+                throw ValidationException::withMessages([
+                    'images' => $etiqueta . ' no es un base64 válido.',
+                ]);
+            }
+
+            if (strlen($bytes) > self::IMAGEN_MAX_BYTES) {
+                throw ValidationException::withMessages([
+                    'images' => $etiqueta . ' supera el tamaño máximo de 5 MB.',
+                ]);
+            }
+
+            $info = @getimagesizefromstring($bytes);
+
+            if ($info === false || !in_array($info['mime'], self::IMAGEN_MIMES, true)) {
+                throw ValidationException::withMessages([
+                    'images' => $etiqueta . ' no es una imagen válida. Formatos permitidos: JPG, PNG, WEBP.',
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Decodifica, valida y optimiza una imagen en base64.
+     *
+     * @return array{bytes: string, extension: string}
+     * @throws ValidationException
+     */
+    private function procesarImagenBase64(string $dataUri): array
+    {
+        preg_match('#^data:image/([a-z0-9]+);base64,#i', $dataUri, $matches);
+        $extensionOriginal = strtolower($matches[1] ?? 'jpeg');
+        if ($extensionOriginal === 'jpg') {
+            $extensionOriginal = 'jpeg';
+        }
+
+        $bytes = base64_decode(substr($dataUri, strpos($dataUri, ',') + 1), true);
+
+        if ($bytes === false || $bytes === '') {
+            throw ValidationException::withMessages(['images' => 'Una de las imágenes no es un base64 válido.']);
+        }
+
+        if (strlen($bytes) > self::IMAGEN_MAX_BYTES) {
+            throw ValidationException::withMessages(['images' => 'Una de las imágenes supera el tamaño máximo de 5 MB.']);
+        }
+
+        $info = @getimagesizefromstring($bytes);
+
+        if ($info === false || !in_array($info['mime'], self::IMAGEN_MIMES, true)) {
+            throw ValidationException::withMessages([
+                'images' => 'Formato de imagen no permitido. Usa JPG, PNG o WEBP.',
+            ]);
+        }
+
+        $optimizada = $this->optimizarImagen($bytes, $info['mime']);
+
+        return [
+            'bytes' => $optimizada['bytes'],
+            'extension' => $optimizada['extension'],
+        ];
+    }
+
+    /**
+     * Reduce la imagen a un máximo de IMAGEN_MAX_PX y recomprime en JPEG
+     * (calidad IMAGEN_CALIDAD) para disminuir el peso en disco y en el PDF.
+     * Si GD no está disponible conserva los bytes originales.
+     */
+    private function optimizarImagen(string $bytes, string $mime): array
+    {
+        $extensionOriginal = $mime === 'image/png' ? 'png' : ($mime === 'image/webp' ? 'webp' : 'jpeg');
+
+        if (!function_exists('imagecreatefromstring')) {
+            return ['bytes' => $bytes, 'extension' => $extensionOriginal];
+        }
+
+        $origen = @imagecreatefromstring($bytes);
+
+        if (!$origen) {
+            return ['bytes' => $bytes, 'extension' => $extensionOriginal];
+        }
+
+        $ancho = imagesx($origen);
+        $alto = imagesy($origen);
+        $factor = min(1, self::IMAGEN_MAX_PX / max($ancho, $alto));
+        $nuevoAncho = max(1, (int) round($ancho * $factor));
+        $nuevoAlto = max(1, (int) round($alto * $factor));
+
+        $destino = imagecreatetruecolor($nuevoAncho, $nuevoAlto);
+
+        // Fondo blanco para conservar el aspecto si la imagen tiene transparencia.
+        $blanco = imagecolorallocate($destino, 255, 255, 255);
+        imagefill($destino, 0, 0, $blanco);
+        imagecopyresampled($destino, $origen, 0, 0, 0, 0, $nuevoAncho, $nuevoAlto, $ancho, $alto);
+
+        ob_start();
+        imagejpeg($destino, null, self::IMAGEN_CALIDAD);
+        $optimizada = ob_get_clean();
+
+        imagedestroy($origen);
+        imagedestroy($destino);
+
+        if (empty($optimizada)) {
+            return ['bytes' => $bytes, 'extension' => $extensionOriginal];
+        }
+
+        return ['bytes' => $optimizada, 'extension' => 'jpg'];
+    }
+
+    /**
+     * Normaliza el tamaño de visualización en el PDF.
+     */
+    private function normalizarTamano(?string $tamano): string
+    {
+        $valor = $tamano !== null ? trim((string) $tamano) : '';
+
+        return in_array($valor, self::TAMANOS_PDF, true) ? $valor : '50';
+    }
+
+    /**
+     * Elimina el archivo físico de una imagen solo si vive en la carpeta
+     * gestionada por este controlador (reporte/images/).
+     */
+    private function eliminarArchivoImagen(ReporteImagen $imagen): void
+    {
+        $ruta = $this->rutaRelativaDesdeUrl($imagen->url);
+
+        if ($ruta && str_starts_with($ruta, 'reporte/images/')) {
+            Storage::disk('public')->delete($ruta);
+        }
+    }
+
+    /**
+     * Convierte una URL de storage (absoluta o relativa) en ruta relativa al disco public.
+     */
+    private function rutaRelativaDesdeUrl(string $url): ?string
+    {
+        $path = parse_url($url, PHP_URL_PATH);
+
+        if (!$path) {
+            return null;
+        }
+
+        $marca = '/storage/';
+        $pos = strpos($path, $marca);
+
+        return $pos === false
+            ? ltrim($path, '/')
+            : substr($path, $pos + strlen($marca));
     }
 }

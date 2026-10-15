@@ -18,7 +18,10 @@ class Reporte extends Model
         'equipo_id',
         'tipo',
         'fecha',
-        'estado'
+        'estado',
+        'recomendaciones_cliente',
+        'riesgos_identificados',
+        'proximas_acciones'
     ];
 
     public function actividades()
@@ -83,6 +86,11 @@ class Reporte extends Model
     public function resultadoReporte()
     {
         return $this->hasOne(Resultado_reporte::class);
+    }
+
+    public function images()
+    {
+        return $this->hasMany(ReporteImagen::class);
     }
 
 }

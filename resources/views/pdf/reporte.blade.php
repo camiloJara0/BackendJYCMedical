@@ -273,8 +273,8 @@
         <tbody>
             @foreach($reporte->mediciones as $medicion)
             <tr>
-                <td style="padding:6px;">{{ $medicion->variable }}</td>
                 <td style="padding:6px;">{{ $medicion->unidad }}</td>
+                <td style="padding:6px;">{{ $medicion->variable }}</td>
                 <td style="padding:6px;">{{ $medicion->valor_medido }}</td>
                 <td style="padding:6px;">{{ $medicion->valor_esperado }}</td>
             </tr>
@@ -317,6 +317,147 @@
             @endforeach
         </tbody>
     </table>
+
+    <!-- EVIDENCIA FOTOGRÁFICA -->
+    @php
+        $imagenesEvidencia = collect($reporte->images)->sortBy('position')->values();
+
+        // Agrupar en filas según el tamaño configurado por imagen:
+        // 100% -> fila sola; 50% -> de a 2; 30% -> de a 3.
+        $filasEvidencia = [];
+        $filaActual = [];
+        $capacidadFila = null;
+
+        foreach ($imagenesEvidencia as $imagenEvidencia) {
+            $tamanoImagen = in_array((string) ($imagenEvidencia->tamaño ?? ''), ['100', '50', '30'], true)
+                ? (string) $imagenEvidencia->tamaño
+                : '50';
+            $capacidad = $tamanoImagen === '100' ? 1 : ($tamanoImagen === '50' ? 2 : 3);
+
+            if ($capacidadFila !== null && ($capacidad !== $capacidadFila || count($filaActual) >= $capacidadFila)) {
+                $filasEvidencia[] = $filaActual;
+                $filaActual = [];
+            }
+
+            $filaActual[] = ['imagen' => $imagenEvidencia, 'capacidad' => $capacidad];
+            $capacidadFila = $capacidad;
+
+            if (count($filaActual) >= $capacidadFila) {
+                $filasEvidencia[] = $filaActual;
+                $filaActual = [];
+                $capacidadFila = null;
+            }
+        }
+
+        if (!empty($filaActual)) {
+            $filasEvidencia[] = $filaActual;
+        }
+
+        // Ruta local del archivo para dompdf (soporta URLs absolutas y relativas).
+        $rutaImagenPdf = function ($url) {
+            $path = parse_url($url, PHP_URL_PATH);
+            if (!$path) {
+                return '';
+            }
+            $path = ltrim($path, '/');
+            $pos = strpos($path, 'storage/');
+            $relativa = $pos === false ? $path : substr($path, $pos);
+
+            return public_path($relativa);
+        };
+    @endphp
+
+    @if($imagenesEvidencia->count() > 0)
+        <section style="margin-top:20px;">
+            <h3 style="color:#2262a3; border-bottom:1px solid #e5e7eb; padding-bottom:5px;">
+                Evidencia Fotográfica
+            </h3>
+
+            @php
+                $numeroFigura = 0;
+                // dompdf no resuelve bien anchos porcentuales en tablas/imágenes:
+                // se usan anchos absolutos en px para que 100% / 50% / 30% se respeten.
+                $anchoContenidoPdf = 700;   // px útiles dentro de @page (A4 - márgenes 40+40)
+                $altoMaximoPdf = 860;       // px de alto disponibles por página (deja espacio al pie)
+                $paddingCeldaPdf = 8;       // 4px a cada lado de la celda
+            @endphp
+
+            @foreach($filasEvidencia as $filaEvidencia)
+                <table style="width:{{ $anchoContenidoPdf }}px; table-layout:fixed; border-collapse:collapse; margin-bottom:12px;">
+                    <tr style="page-break-inside:avoid;">
+                        @foreach($filaEvidencia as $celdaEvidencia)
+                            @php
+                                $numeroFigura++;
+                                $imagenPdf = $celdaEvidencia['imagen'];
+                                $rutaPdf = $rutaImagenPdf($imagenPdf->url);
+
+                                // Ancho de celda según el tamaño configurado (1 o 2 o 3 por fila)
+                                $anchoCeldaPdf = (int) floor($anchoContenidoPdf / $celdaEvidencia['capacidad']);
+                                $anchoImagenPdf = max(80, $anchoCeldaPdf - $paddingCeldaPdf);
+
+                                // Si la foto no cabe en el alto de la página, se reduce el ancho
+                                // proporcionalmente para evitar páginas en blanco.
+                                if ($rutaPdf && file_exists($rutaPdf)) {
+                                    $dimensionesPdf = @getimagesize($rutaPdf);
+                                    if ($dimensionesPdf && $dimensionesPdf[1] > 0) {
+                                        $altoImagenPdf = $anchoImagenPdf * $dimensionesPdf[1] / $dimensionesPdf[0];
+                                        if ($altoImagenPdf > $altoMaximoPdf) {
+                                            $anchoImagenPdf = max(80, (int) floor($altoMaximoPdf * $dimensionesPdf[0] / $dimensionesPdf[1]));
+                                        }
+                                    }
+                                }
+                            @endphp
+                            <td style="width:{{ $anchoCeldaPdf }}px; vertical-align:top; padding:4px; text-align:center; border:none;">
+                                @if($rutaPdf && file_exists($rutaPdf))
+                                    <img src="{{ $rutaPdf }}"
+                                        style="width:{{ $anchoImagenPdf }}px; max-width:100%; height:auto; border:1px solid #ddd; border-radius:4px;" />
+                                @endif
+                                <p style="margin:4px 0 0 0; font-size:9px; color:#374151; text-align:center;">
+                                    <strong>Figura {{ $numeroFigura }}</strong>@if(!empty($imagenPdf->descripcion)) &mdash; {{ $imagenPdf->descripcion }}@endif
+                                </p>
+                            </td>
+                        @endforeach
+                    </tr>
+                </table>
+            @endforeach
+        </section>
+    @endif
+
+    <!-- RECOMENDACIONES -->
+    @if($reporte->recomendaciones_cliente || $reporte->riesgos_identificados || $reporte->proximas_acciones)
+        <section style="margin-top:20px;">
+            <h3 style="color:#2262a3; border-bottom:1px solid #e5e7eb; padding-bottom:5px;">
+                Recomendaciones
+            </h3>
+
+            @if($reporte->recomendaciones_cliente)
+                <div style="border:1px solid #e5e7eb; border-left:4px solid #2262a3; background:#f9fafb; padding:8px; margin-bottom:8px;">
+                    <p style="margin:0 0 4px 0; font-weight:bold; font-size:11px; color:#2262a3;">
+                        Recomendaciones al cliente
+                    </p>
+                    <p style="margin:0; font-size:10px; color:#374151; white-space:pre-wrap;">{{ $reporte->recomendaciones_cliente }}</p>
+                </div>
+            @endif
+
+            @if($reporte->riesgos_identificados)
+                <div style="border:1px solid #e5e7eb; border-left:4px solid #2262a3; background:#f9fafb; padding:8px; margin-bottom:8px;">
+                    <p style="margin:0 0 4px 0; font-weight:bold; font-size:11px; color:#2262a3;">
+                        Riesgos identificados
+                    </p>
+                    <p style="margin:0; font-size:10px; color:#374151; white-space:pre-wrap;">{{ $reporte->riesgos_identificados }}</p>
+                </div>
+            @endif
+
+            @if($reporte->proximas_acciones)
+                <div style="border:1px solid #e5e7eb; border-left:4px solid #2262a3; background:#f9fafb; padding:8px; margin-bottom:8px;">
+                    <p style="margin:0 0 4px 0; font-weight:bold; font-size:11px; color:#2262a3;">
+                        Próximas acciones sugeridas
+                    </p>
+                    <p style="margin:0; font-size:10px; color:#374151; white-space:pre-wrap;">{{ $reporte->proximas_acciones }}</p>
+                </div>
+            @endif
+        </section>
+    @endif
 
     <!-- FIRMAS -->
     <section style="margin-top:40px;">
