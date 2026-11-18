@@ -18,5 +18,7 @@ class DatabaseSeeder extends Seeder
         $this->call(ProductosSeeder::class);
         $this->call(UserSeeder::class);
         $this->call(SistemaComponenteSeeder::class);
+        $this->call(BackofficePermisosSeeder::class);
+        $this->call(SuperAdminSeeder::class);
     }
 }

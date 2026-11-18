@@ -10,10 +10,10 @@ class Rol_has_permiso extends Model
     use HasFactory;
     protected $table = 'rol_has_permisos';
 
-    public function tecnico(){
-        return $this->belongsTo(Tecnico::class, 'rol_id');
+    public function rol(){
+        return $this->belongsTo(Rol::class, 'rol_id');
     }
     public function seccion(){
-        return $this->belongsTo(Secciones::class, 'seccion_id');
+        return $this->belongsTo(Seccion::class, 'seccion_id');
     }
 }

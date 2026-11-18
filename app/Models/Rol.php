@@ -9,8 +9,13 @@ class Rol extends Model
 {
     use HasFactory;
     protected $table = 'roles';
+
+    protected $fillable = [
+        'nombre',
+        'estado',
+    ];
     public function permisos()
     {
-        return $this->belongsToMany(Secciones::class, 'rol_has_permisos', 'tecnico_id', 'seccion_id');
+        return $this->belongsToMany(Seccion::class, 'rol_has_permisos', 'rol_id', 'seccion_id');
     }
 }

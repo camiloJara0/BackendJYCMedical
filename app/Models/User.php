@@ -17,6 +17,18 @@ class User extends Model
         'correo',
         'contraseña',
         'rol',
+        'rol_id',
         'estado',
+        'ultimo_acceso_at',
+        'motivo_suspension',
     ];
+
+    protected $hidden = [
+        'contraseña',
+    ];
+
+    public function rolModel()
+    {
+        return $this->belongsTo(Rol::class, 'rol_id');
+    }
 }

@@ -25,6 +25,24 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
-        //
+        Gate::define('backoffice.access', function ($user) {
+            if ($user->estado !== 'activo') {
+                return false;
+            }
+
+            if ($user->rol === 'SuperAdmin') {
+                return true;
+            }
+
+            if (!$user->rol_id) {
+                return false;
+            }
+
+            return \DB::table('rol_has_permisos')
+                ->join('secciones', 'secciones.id', '=', 'rol_has_permisos.seccion_id')
+                ->where('rol_has_permisos.rol_id', $user->rol_id)
+                ->where('secciones.nombre', 'backoffice_access')
+                ->exists();
+        });
     }
 }

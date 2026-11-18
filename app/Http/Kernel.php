@@ -46,6 +46,7 @@ class Kernel extends HttpKernel
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
             \Fruitcake\Cors\HandleCors::class,
             'throttle:api',
+            \App\Http\Middleware\RegistrarMetricas::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
     ];
@@ -69,5 +70,8 @@ class Kernel extends HttpKernel
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'check.token.expiration' => \App\Http\Middleware\CheckTokenExpiration::class,
+        'backoffice.access' => \App\Http\Middleware\BackofficeAccess::class,
+        'prevenir.escalamiento' => \App\Http\Middleware\PrevenirEscalamiento::class,
+        'registrar.metricas' => \App\Http\Middleware\RegistrarMetricas::class,
     ];
 }

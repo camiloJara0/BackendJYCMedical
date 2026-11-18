@@ -127,11 +127,20 @@ class UserController extends Controller
         }
 
         $tokenResult = $user->createToken('auth_token');
-        
+
         // Establece la expiración
         $accessToken = $tokenResult->accessToken;
-        $accessToken->expires_at = now()->addHours(16);
+        $accessToken->expires_at = now()->addHours((int) config('backoffice.ajustes.duracion_token_horas', 16));
+        $accessToken->ip_address = $request->ip();
+        $accessToken->user_agent = Str::limit((string) $request->userAgent(), 250, '');
         $accessToken->save();
+
+        $user->ultimo_acceso_at = now();
+        $user->save();
+
+        if ((bool) config('backoffice.ajustes.podar_sesiones_en_login', true)) {
+            $this->podarSesiones($user);
+        }
 
         // Obtén el token en texto plano
         $token = $tokenResult->plainTextToken;
@@ -142,6 +151,12 @@ class UserController extends Controller
 
             $tecnico_id = $tecnico->id;
         }
+
+        \App\Services\Auditoria::registrar($request, 'login', 'users', $user->id, null, [
+            'correo' => $user->correo,
+            'rol' => $user->rol,
+            'ip' => $request->ip(),
+        ]);
 
         return response()->json([
             'success' => true,
@@ -155,6 +170,66 @@ class UserController extends Controller
             ],
         ]);
 
+    }
+
+    public function logout(Request $request)
+    {
+        $token = $request->user()?->currentAccessToken();
+
+        if ($token) {
+            \App\Services\Auditoria::registrar($request, 'logout', 'personal_access_tokens', $token->id, [
+                'name' => $token->name,
+            ], null);
+
+            $token->delete();
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Sesión cerrada',
+        ]);
+    }
+
+    public function misessiones(Request $request)
+    {
+        $user = $request->user();
+
+        $sesiones = \DB::table('personal_access_tokens')
+            ->where('tokenable_type', User::class)
+            ->where('tokenable_id', $user->id)
+            ->orderByDesc('created_at')
+            ->get(['id', 'name', 'ip_address', 'user_agent', 'last_used_at', 'expires_at', 'created_at']);
+
+        return response()->json([
+            'success' => true,
+            'data' => $sesiones,
+        ]);
+    }
+
+    protected function podarSesiones(User $user): void
+    {
+        $maximo = max(1, (int) config('backoffice.ajustes.sesiones_maximas_por_usuario', 5));
+
+        $vigentes = \DB::table('personal_access_tokens')
+            ->where('tokenable_type', User::class)
+            ->where('tokenable_id', $user->id)
+            ->where('expires_at', '>', now())
+            ->orderByDesc('created_at')
+            ->pluck('id');
+
+        if ($vigentes->count() > $maximo) {
+            $sobrantes = $vigentes->slice($maximo)->values()->all();
+
+            \DB::table('personal_access_tokens')->whereIn('id', $sobrantes)->delete();
+        }
+
+        \DB::table('personal_access_tokens')
+            ->where('tokenable_type', User::class)
+            ->where('tokenable_id', $user->id)
+            ->where(function ($q) {
+                $q->whereNull('expires_at')->orWhere('expires_at', '<', now());
+            })
+            ->delete();
     }
 
     public function verificacion(Request $request)
@@ -241,6 +316,21 @@ class UserController extends Controller
         $registro->save();
 
         return response()->json(['success' => true, 'message' => 'Contraseña actualizada correctamente']);
+    }
+
+    public function verificarUsuario(Request $request)
+    {
+        $request->validate([
+            'correo' => 'required|email',
+        ]);
+
+        $user = User::where('correo', $request->correo)->first();
+
+        return response()->json([
+            'success' => (bool) $user,
+            'primer_ingreso' => (bool) ($user && empty($user->contraseña)),
+            'message' => $user ? 'Usuario encontrado' : 'El correo no se encuentra registrado',
+        ], 200);
     }
 
     public function aprobarToken(Request $request)
